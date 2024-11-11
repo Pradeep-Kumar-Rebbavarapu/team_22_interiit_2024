@@ -41,7 +41,15 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('MetaData created or retrieved'))
 
             # MatchInfo
+            target_runs = None
+            target_overs = None
             info = data.get("info", {})
+            for inning in data.get("innings", []):
+                if "target" in inning:
+                    target_runs = inning["target"].get("runs")
+                    target_overs = inning["target"].get("overs")
+                    break
+                
             match_info = MatchInfo.objects.create(
                 balls_per_over=info.get("balls_per_over", 6),
                 city=info.get("city", ""),
@@ -56,8 +64,8 @@ class Command(BaseCommand):
                 player_of_match=info.get("player_of_match", [""])[0],
                 toss_decision=info.get("toss", {}).get("decision", ""),
                 toss_winner=info.get("toss", {}).get("winner", ""),
-                target_runs=info.get("innings", {}).get("target", {}).get("runs"),
-                target_overs=info.get("innings", {}).get("target", {}).get("overs"),
+                target_overs=target_overs,
+                target_runs=target_runs,
                 meta=meta_obj
             )
             self.stdout.write(self.style.SUCCESS('MatchInfo created'))

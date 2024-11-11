@@ -3,19 +3,19 @@ from .models import MatchInfo, Team, MetaData, Official, Outcome, Inning, Delive
 
 class OfficialInline(admin.TabularInline):
     model = Official
-    extra = 1
+    extra = 0
 
 class OutcomeInline(admin.StackedInline):
     model = Outcome
-    extra = 1
+    extra = 0
 
 class InningInline(admin.TabularInline):
     model = Inning
-    extra = 1
+    extra = 0
 
 class PowerplayInline(admin.TabularInline):
     model = Powerplay
-    extra = 1
+    extra = 0
 
 class MatchInfoAdmin(admin.ModelAdmin):
     inlines = [OfficialInline, OutcomeInline, InningInline, PowerplayInline]

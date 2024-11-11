@@ -198,7 +198,7 @@ class Powerplay(models.Model):
     match_info = models.ForeignKey(MatchInfo, on_delete=models.CASCADE, related_name='powerplays')
 
     def __str__(self):
-        return f"Powerplay from {self.from_} to {self.to}"
+        return f"Powerplay from {self.from_over} to {self.to}"
 
     class Meta:
         verbose_name = "Powerplay"
