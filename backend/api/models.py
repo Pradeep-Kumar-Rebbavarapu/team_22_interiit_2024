@@ -49,10 +49,12 @@ class MatchInfo(models.Model):
     team_type = models.CharField(max_length=50)
     venue = models.CharField(max_length=100)
     player_of_match = models.CharField(max_length=100)
-    team_a = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_as_team_a')
-    team_b = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_as_team_b')
+    team_a = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_a', null=True, blank=True)
+    team_b = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_b', null=True, blank=True)
     toss_decision = models.CharField(max_length=10)
     toss_winner = models.CharField(max_length=100)
+    target_runs = models.IntegerField(null=True, blank=True)
+    target_overs = models.IntegerField(null=True, blank=True)
     meta = models.OneToOneField(MetaData, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -94,7 +96,25 @@ class Outcome(models.Model):
 class Player(models.Model):
     name = models.CharField(max_length=100)
     unique_name = models.CharField(max_length=100, unique=True)
-    identifier = models.CharField(max_length=10, null=True, blank=True)
+    identifier = models.CharField(max_length=10, null=True, blank=True, unique=True)
+    key_bcci = models.CharField(max_length=100, null=True, blank=True)
+    key_bcci_2 = models.CharField(max_length=100, null=True, blank=True)
+    key_bigbash = models.CharField(max_length=100, null=True, blank=True)
+    key_cricbuzz = models.CharField(max_length=100, null=True, blank=True)
+    key_cricheroes = models.CharField(max_length=100, null=True, blank=True)
+    key_crichq = models.CharField(max_length=100, null=True, blank=True)
+    key_cricinfo = models.CharField(max_length=100, null=True, blank=True)
+    key_cricinfo_2 = models.CharField(max_length=100, null=True, blank=True)
+    key_cricingif = models.CharField(max_length=100, null=True, blank=True)
+    key_cricketarchive = models.CharField(max_length=100, null=True, blank=True)
+    key_cricketarchive_2 = models.CharField(max_length=100, null=True, blank=True)
+    key_cricketworld = models.CharField(max_length=100, null=True, blank=True)
+    key_nvplay = models.CharField(max_length=100, null=True, blank=True)
+    key_nvplay_2 = models.CharField(max_length=100, null=True, blank=True)
+    key_opta = models.CharField(max_length=100, null=True, blank=True)
+    key_opta_2 = models.CharField(max_length=100, null=True, blank=True)
+    key_pulse = models.CharField(max_length=100, null=True, blank=True)
+    key_pulse_2 = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -118,6 +138,7 @@ class Inning(models.Model):
 
 # Delivery details
 class Delivery(models.Model):
+    over = models.ForeignKey('Over', on_delete=models.CASCADE, related_name='deliveries')
     batter = models.CharField(max_length=100)
     bowler = models.CharField(max_length=100)
     non_striker = models.CharField(max_length=100)
@@ -135,7 +156,6 @@ class Delivery(models.Model):
 class Over(models.Model):
     inning = models.ForeignKey(Inning, on_delete=models.CASCADE, related_name='overs')
     over_number = models.IntegerField()
-    deliveries = models.ManyToManyField(Delivery, related_name='over')
 
     def __str__(self):
         return f"Over {self.over_number} in {self.inning}"
@@ -170,3 +190,16 @@ class Wicket(models.Model):
     class Meta:
         verbose_name = "Wicket"
         verbose_name_plural = "Wickets"
+
+class Powerplay(models.Model):
+    from_over = models.DecimalField(max_digits=3, decimal_places=1)
+    to = models.DecimalField(max_digits=3, decimal_places=1)
+    powerplay_type = models.CharField(max_length=10)
+    match_info = models.ForeignKey(MatchInfo, on_delete=models.CASCADE, related_name='powerplays')
+
+    def __str__(self):
+        return f"Powerplay from {self.from_} to {self.to}"
+
+    class Meta:
+        verbose_name = "Powerplay"
+        verbose_name_plural = "Powerplays"
