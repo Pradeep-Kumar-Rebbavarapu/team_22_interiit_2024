@@ -4,8 +4,42 @@ from .models import (
     Extra, Wicket, Powerplay
 )
 
-# Register the models with the admin site
-admin.site.register(MetaData)
+class OfficialInline(admin.TabularInline):
+    model = Official
+    extra = 0
+
+class OutcomeInline(admin.StackedInline):
+    model = Outcome
+    extra = 0
+
+class DeliveryInline(admin.TabularInline):
+    model = Delivery
+    extra = 0
+
+class OverInline(admin.TabularInline):
+    model = Over
+    extra = 0
+    inlines = [DeliveryInline]
+
+class InningInline(admin.TabularInline):
+    model = Inning
+    extra = 0
+
+class PowerplayInline(admin.TabularInline):
+    model = Powerplay
+    extra = 0
+
+@admin.register(MatchInfo)
+class MatchInfoAdmin(admin.ModelAdmin):
+    inlines = [OfficialInline, OutcomeInline, InningInline, PowerplayInline]
+    list_display = ('match_type', 'date', 'team_a', 'team_b', 'venue')
+    search_fields = ('team_a__name', 'team_b__name', 'venue')
+
+@admin.register(Inning)
+class InningAdmin(admin.ModelAdmin):
+    inlines = [OverInline]
+    list_display = ('team', 'match_info')
+    search_fields = ('team__name', 'match_info__team_a__name', 'match_info__team_b__name')
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
@@ -15,11 +49,6 @@ class TeamAdmin(admin.ModelAdmin):
     def player_count(self, obj):
         return obj.players.count()
     player_count.short_description = 'Players'
-
-@admin.register(MatchInfo)
-class MatchInfoAdmin(admin.ModelAdmin):
-    list_display = ('date', 'gender', 'match_type', 'team_a', 'team_b')
-    search_fields = ('city', 'date', 'gender', 'match_type', 'season', 'venue', 'team_a__name', 'team_b__name')
 
 @admin.register(Official)
 class OfficialAdmin(admin.ModelAdmin):
@@ -39,11 +68,6 @@ class PlayerAdmin(admin.ModelAdmin):
     def teams_display(self, obj):
         return ', '.join(team.name for team in obj.teams.all())
     teams_display.short_description = 'Teams'
-
-@admin.register(Inning)
-class InningAdmin(admin.ModelAdmin):
-    list_display = ('match_info', 'team')
-    search_fields = ('match_info__date', 'match_info__team_a__name', 'match_info__team_b__name', 'team__name')
 
 @admin.register(Delivery)
 class DeliveryAdmin(admin.ModelAdmin):
@@ -69,3 +93,5 @@ class WicketAdmin(admin.ModelAdmin):
 class PowerplayAdmin(admin.ModelAdmin):
     list_display = ('match_info', 'from_over', 'to', 'powerplay_type')
     search_fields = ('match_info__date', 'match_info__team_a__name', 'match_info__team_b__name', 'from_over', 'to', 'powerplay_type')
+
+admin.site.register(MetaData)

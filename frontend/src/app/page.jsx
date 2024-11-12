@@ -5,7 +5,7 @@ import MatchCard from "@/components/MatchCard";
 import { getMatches } from "@/api";
 
 export default async function Component() {
-  const matches = await getMatches();
+  const matches = await getMatches({limit:20});
   return (
     <div className=" h-full bg-gradient-to-b from-red-900 to-red-800">
       {/* Header */}

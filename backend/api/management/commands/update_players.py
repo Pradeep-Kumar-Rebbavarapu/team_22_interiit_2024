@@ -53,10 +53,8 @@ class Command(BaseCommand):
                     for key, value in player_data.items():
                         setattr(player, key, value)
                     players_to_update.append(player)
-                    self.stdout.write(self.style.SUCCESS(f"Updated player: {player.name}"))
                 except Player.DoesNotExist:
                     players_to_create.append(Player(**player_data))
-                    self.stdout.write(self.style.SUCCESS(f"Created player: {player_data['name']}"))
 
         if players_to_create:
             Player.objects.bulk_create(players_to_create)

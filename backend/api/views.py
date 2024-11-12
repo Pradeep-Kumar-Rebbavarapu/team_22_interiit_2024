@@ -14,8 +14,8 @@ class MatchList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = MatchInfo.objects.all()
-        # limit = self.request.query_params.get('limit', '20')
-        # if limit is not None and limit.isdigit():
-        #     queryset = queryset[:int(limit)]
+        limit = self.request.query_params.get('limit')
+        if limit is not None and limit.isdigit():
+            queryset = queryset[:int(limit)]
         return queryset
 
