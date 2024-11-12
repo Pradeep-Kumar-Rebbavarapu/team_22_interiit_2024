@@ -37,6 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # 3rd Party
+    'django_filters',
+    'drf_spectacular',
+
+    # Local
     "api"
 ]
 
@@ -134,3 +140,15 @@ CELERY_RESULT_SERIALIZER = 'json'
 # ML Backend Configuration
 ML_BACKEND_URL = os.getenv('ML_BACKEND_URL', 'http://ml-model-backend:8000')
 ML_API_KEY = os.getenv('ML_API_KEY', 'your-api-key-here')
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Matches API',
+    'DESCRIPTION': 'API for cricket data',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
