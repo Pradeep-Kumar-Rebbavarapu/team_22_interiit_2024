@@ -127,7 +127,7 @@ class Player(models.Model):
 # Inning and overs
 class Inning(models.Model):
     match_info = models.ForeignKey(MatchInfo, on_delete=models.CASCADE, related_name='innings')
-    team = models.CharField(max_length=100)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='innings')
 
     def __str__(self):
         return f"Inning of {self.team} in {self.match_info}"

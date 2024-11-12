@@ -1,57 +1,106 @@
-from rest_framework.serializers import ModelSerializer
-from .models import MetaData,Team,Official,Outcome,Powerplay,MatchInfo, Inning
+from rest_framework import serializers
+from .models import MatchInfo, Team, MetaData, Official, Outcome, Inning, Delivery, Over, Extra, Wicket, Powerplay, Player
 
-class MetaDataSerializer(ModelSerializer):
-    class Meta:
-        model = MetaData
-        fields = '__all__'
-
-class TeamSerializer(ModelSerializer):
-    class Meta:
-        model = Team
-        fields = '__all__'
-
-class OfficialSerializer(ModelSerializer):
+class OfficialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Official
-        fields = '__all__'
+        fields = "__all__"
 
-class OutcomeSerializer(ModelSerializer):
+# Meta information serializer
+class MetaDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetaData
+        fields = "__all__"
+
+# Team serializer
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = "__all__"
+
+# Outcome serializer
+class OutcomeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Outcome
-        fields = '__all__'
+        fields = "__all__"
 
-class PowerplaySerializer(ModelSerializer):
+# Extra serializer
+class ExtraSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Powerplay
-        fields = '__all__'
+        model = Extra
+        fields = "__all__"
 
-class MatchInfoSerializer(ModelSerializer):
-    team_a = TeamSerializer()
-    team_b = TeamSerializer()
-    meta = MetaDataSerializer()
-    officials = OfficialSerializer(many=True)
-    outcome = OutcomeSerializer()
-    powerplays = PowerplaySerializer(many=True)
+# Wicket serializer
+class WicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wicket
+        fields = "__all__"
+
+# Delivery serializer
+class DeliverySerializer(serializers.ModelSerializer):
+    extras = ExtraSerializer()
+    wickets = WicketSerializer(many=True)
 
     class Meta:
-        model = MatchInfo
-        fields = '__all__'
+        model = Delivery
+        fields = "__all__"
 
-class InningSerializer(ModelSerializer):
+# Over serializer
+class OverSerializer(serializers.ModelSerializer):
+    deliveries = DeliverySerializer(many=True)
+
+    class Meta:
+        model = Over
+        fields = "__all__"
+
+# Innings serializer
+class InningsSerializer(serializers.ModelSerializer):
+    overs = OverSerializer(many=True)
+
     class Meta:
         model = Inning
-        fields = '__all__'
+        fields = "__all__"
 
-class MatchPlayersSerializer(ModelSerializer):
+# PowerPlay serializer
+class PowerPlaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Powerplay
+        fields = "__all__"
+
+# Match serializer
+class MatchSerializer(serializers.ModelSerializer):
+    team_a = TeamSerializer()
+    team_b = TeamSerializer()
+    outcome = OutcomeSerializer()
+
+    class Meta:
+        model = MatchInfo
+        fields = "__all__"
+
+# Match Detail serializer
+class MatchDetailSerializer(serializers.ModelSerializer):
+    team_a = TeamSerializer()
+    team_b = TeamSerializer()
+    outcome = OutcomeSerializer()
+    innings = InningsSerializer(many=True)
+    powerplays = PowerPlaySerializer(many=True)
+
+    class Meta:
+        model = MatchInfo
+        fields = "__all__"
+
+# Match Players serializer
+class MatchPlayersSerializer(serializers.ModelSerializer):
     team_a = TeamSerializer()
     team_b = TeamSerializer()
     meta = MetaDataSerializer()
     officials = OfficialSerializer(many=True)
     outcome = OutcomeSerializer()
-    powerplays = PowerplaySerializer(many=True)
-    innings = InningSerializer(many=True)
+    powerplays = PowerPlaySerializer(many=True)
+    innings = InningsSerializer(many=True)
 
     class Meta:
         model = MatchInfo
-        fields = '__all__'
+        fields = "__all__"
+
+

@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import transaction
 from api.models import (MetaData, MatchInfo, Team, Official, Outcome, 
                         Player, Inning, Over, Delivery, Extra, Wicket, Powerplay)
+from tqdm import tqdm
 
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s %(levelname)s %(message)s')
@@ -16,17 +17,19 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         folder_name = input("Enter the folder name inside the data folder containing the JSON files: ")
         data_folder = os.path.join(settings.BASE_DIR, 'data', folder_name)
-        for filename in os.listdir(data_folder):
-            if filename.endswith('.json'):
-                file_path = os.path.join(data_folder, filename)
-                try:
-                    with open(file_path, 'r') as file:
-                        data = json.load(file)
-                        self.stdout.write(self.style.SUCCESS(f'Processing file: {filename}'))
-                        self.create_match_data(data)
-                except Exception as e:
-                    logging.error(f'Failed to process file {filename}: {e}')
-                    self.stdout.write(self.style.ERROR(f'Failed to process file: {filename}'))
+        json_files = [f for f in os.listdir(data_folder) if f.endswith('.json')]
+        
+        for filename in tqdm(json_files, desc="Processing files"):
+            file_path = os.path.join(data_folder, filename)
+            try:
+                with open(file_path, 'r') as file:
+                    data = json.load(file)
+                    self.stdout.write(self.style.SUCCESS(f'Processing file: {filename}'))
+                    self.create_match_data(data)
+                    os.system('cls' if os.name == 'nt' else 'clear')
+            except Exception as e:
+                logging.error(f'Failed to process file {filename}: {e}')
+                self.stdout.write(self.style.ERROR(f'Failed to process file: {filename}'))
 
     @transaction.atomic
     def create_match_data(self, data):
@@ -38,7 +41,7 @@ class Command(BaseCommand):
                 created=meta_data.get("created"),
                 revision=meta_data.get("revision")
             )
-            self.stdout.write(self.style.SUCCESS('MetaData created or retrieved'))
+            tqdm.write(self.style.SUCCESS('MetaData created or retrieved'))
 
             # MatchInfo
             target_runs = None
@@ -68,7 +71,7 @@ class Command(BaseCommand):
                 target_runs=target_runs,
                 meta=meta_obj
             )
-            self.stdout.write(self.style.SUCCESS('MatchInfo created'))
+            tqdm.write(self.style.SUCCESS('MatchInfo created'))
 
             # Teams and Players
             team_objs = {}
@@ -86,7 +89,7 @@ class Command(BaseCommand):
                         raise Exception(f'Player with identifier {identifier} not found')
                     player_list.append(player_obj)
                 team_obj.players.set(player_list)
-                self.stdout.write(self.style.SUCCESS(f'Team and players for {team_name} created or retrieved'))
+                tqdm.write(self.style.SUCCESS(f'Team and players for {team_name} created or retrieved'))
 
             # Set teams for MatchInfo
             teams = list(info.get("teams", []))
@@ -94,7 +97,7 @@ class Command(BaseCommand):
                 match_info.team_a = team_objs[teams[0]]
                 match_info.team_b = team_objs[teams[1]]
                 match_info.save()
-                self.stdout.write(self.style.SUCCESS('Teams set for MatchInfo'))
+                tqdm.write(self.style.SUCCESS('Teams set for MatchInfo'))
 
             # Officials
             officials = info.get("officials", {})
@@ -104,7 +107,7 @@ class Command(BaseCommand):
                 match_referee=officials.get("match_referees", [None])[0],
                 tv_umpire=officials.get("tv_umpires", [None])[0]
             )
-            self.stdout.write(self.style.SUCCESS('Officials created'))
+            tqdm.write(self.style.SUCCESS('Officials created'))
 
             # Outcome
             outcome = info.get("outcome", {})
@@ -114,7 +117,7 @@ class Command(BaseCommand):
                 wickets=outcome.get("by", {}).get("wickets"),
                 winner=outcome.get("winner", "")
             )
-            self.stdout.write(self.style.SUCCESS('Outcome created'))
+            tqdm.write(self.style.SUCCESS('Outcome created'))
 
             # Innings and Overs
             innings = []
@@ -125,7 +128,7 @@ class Command(BaseCommand):
             for inning_data in data.get("innings", []):
                 inning = Inning(
                     match_info=match_info,
-                    team=inning_data.get("team", "")
+                    team=Team.objects.get(name=inning_data.get("team", ""))
                 )
                 innings.append(inning)
                 for over_data in inning_data.get("overs", []):
@@ -168,7 +171,7 @@ class Command(BaseCommand):
                                 fielder=fielder_obj
                             )
                             wickets.append(wicket)
-                self.stdout.write(self.style.SUCCESS(f'Inning and overs for team {inning_data.get("team", "")} created'))
+                tqdm.write(self.style.SUCCESS(f'Inning and overs for team {inning_data.get("team", "")} created'))
 
             Inning.objects.bulk_create(innings)
             Over.objects.bulk_create(overs)
@@ -189,8 +192,8 @@ class Command(BaseCommand):
                     powerplays.append(powerplay)
             Powerplay.objects.bulk_create(powerplays)
 
-            self.stdout.write(self.style.SUCCESS('Powerplays created'))
+            tqdm.write(self.style.SUCCESS('Powerplays created'))
 
         except Exception as e:
             logging.error(f'Failed to create match data: {e}')
-            self.stdout.write(self.style.ERROR('Failed to create match data'))
+            tqdm.write(self.style.ERROR('Failed to create match data'))
