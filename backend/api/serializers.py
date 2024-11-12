@@ -4,7 +4,7 @@ from .models import MatchInfo, Team, MetaData, Official, Outcome, Inning, Delive
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
-        fields = ['name', 'unique_name', 'identifier']
+        fields = ['id', 'name', 'unique_name', 'identifier']
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -18,20 +18,34 @@ class TeamSerializer(serializers.ModelSerializer):
 class OutcomeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Outcome
-        fields = '__all__'
+        exclude = ['id']
+
+
+class ExtraSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Extra
+        exclude = ['id', 'delivery']
+
+
+class WicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Wicket
+        exclude = ['id']
 
 
 class DeliverySerializer(serializers.ModelSerializer):
+    extras = ExtraSerializer()
+    wickets = WicketSerializer(many=True)
     class Meta:
         model = Delivery
-        fields = '__all__'
+        exclude = ['id', 'over']
 
 
 class OverSerializer(serializers.ModelSerializer):
     deliveries = DeliverySerializer(many=True)
     class Meta:
         model = Over
-        fields = '__all__'
+        exclude = ['id', 'inning']
 
 
 class InningsSerializer(serializers.ModelSerializer):
