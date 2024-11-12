@@ -7,9 +7,12 @@ from django.db import transaction
 from api.models import (MetaData, MatchInfo, Team, Official, Outcome, 
                         Player, Inning, Over, Delivery, Extra, Wicket, Powerplay)
 from tqdm import tqdm
+import random
 
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s %(levelname)s %(message)s')
+
+PLAYER_ROLES = ["WK", "BAT", "BOWL", "AR", "BAT", "BOWL", "AR", "BOWL", "BAT"]
 
 class Command(BaseCommand):
     help = "Command to upload match data to the server"
@@ -75,20 +78,21 @@ class Command(BaseCommand):
 
             # Teams and Players
             team_objs = {}
-            player_objs = {player.identifier: player for player in Player.objects.all()}
             for team_name, players in info.get("players", {}).items():
                 team_obj, _ = Team.objects.get_or_create(name=team_name)
                 team_objs[team_name] = team_obj
                 peoples = info.get("registry", {})['people']
-                player_list = []
                 for player_name in players:
                     identifier = peoples[player_name]
-                    player_obj = player_objs.get(identifier)
+                    player_obj = Player.objects.filter(identifier=identifier).first()
+                    if not player_obj.gender:
+                        player_obj.gender = info.get("gender")
+                        player_obj.role = random.choice(PLAYER_ROLES)
+                        player_obj.save()
                     if not player_obj:
                         logging.error(f'Player with identifier {identifier} not found')
                         raise Exception(f'Player with identifier {identifier} not found')
-                    player_list.append(player_obj)
-                team_obj.players.set(player_list)
+                    team_obj.players.add(player_obj)
                 tqdm.write(self.style.SUCCESS(f'Team and players for {team_name} created or retrieved'))
 
             # Set teams for MatchInfo

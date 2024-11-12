@@ -96,6 +96,8 @@ class Outcome(models.Model):
 class Player(models.Model):
     name = models.CharField(max_length=100)
     unique_name = models.CharField(max_length=100, unique=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
+    role = models.CharField(max_length=50, null=True, blank=True)
     identifier = models.CharField(max_length=10, null=True, blank=True, unique=True)
     key_bcci = models.CharField(max_length=100, null=True, blank=True)
     key_bcci_2 = models.CharField(max_length=100, null=True, blank=True)
