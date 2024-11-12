@@ -23,3 +23,4 @@ class MatchList(generics.ListCreateAPIView):
 class MatchDetail(generics.RetrieveUpdateAPIView):
     queryset = MatchInfo.objects.all()
     serializer_class = MatchDetailSerializer
+
