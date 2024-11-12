@@ -1,37 +1,57 @@
-from rest_framework import serializers
-from .models import Player, Team, Match, OptimalTeam, Delivery
+from rest_framework.serializers import ModelSerializer
+from .models import MetaData,Team,Official,Outcome,Powerplay,MatchInfo, Inning
 
-class PlayerSerializer(serializers.ModelSerializer):
+class MetaDataSerializer(ModelSerializer):
     class Meta:
-        model = Player
+        model = MetaData
         fields = '__all__'
 
-class TeamSerializer(serializers.ModelSerializer):
-    players = PlayerSerializer(many=True, read_only=True)
-    
+class TeamSerializer(ModelSerializer):
     class Meta:
         model = Team
         fields = '__all__'
 
-class OptimalTeamSerializer(serializers.ModelSerializer):
-    players = PlayerSerializer(many=True, read_only=True)
-    
+class OfficialSerializer(ModelSerializer):
     class Meta:
-        model = OptimalTeam
+        model = Official
         fields = '__all__'
 
-class DeliverySerializer(serializers.ModelSerializer):
+class OutcomeSerializer(ModelSerializer):
     class Meta:
-        model = Delivery
+        model = Outcome
         fields = '__all__'
 
-class MatchSerializer(serializers.ModelSerializer):
-    team1 = TeamSerializer(read_only=True)
-    team2 = TeamSerializer(read_only=True)
-    optimal_teams = OptimalTeamSerializer(many=True, read_only=True)
-    deliveries = DeliverySerializer(many=True, read_only=True)
-    
+class PowerplaySerializer(ModelSerializer):
     class Meta:
-        model = Match
+        model = Powerplay
         fields = '__all__'
 
+class MatchInfoSerializer(ModelSerializer):
+    team_a = TeamSerializer()
+    team_b = TeamSerializer()
+    meta = MetaDataSerializer()
+    officials = OfficialSerializer(many=True)
+    outcome = OutcomeSerializer()
+    powerplays = PowerplaySerializer(many=True)
+
+    class Meta:
+        model = MatchInfo
+        fields = '__all__'
+
+class InningSerializer(ModelSerializer):
+    class Meta:
+        model = Inning
+        fields = '__all__'
+
+class MatchPlayersSerializer(ModelSerializer):
+    team_a = TeamSerializer()
+    team_b = TeamSerializer()
+    meta = MetaDataSerializer()
+    officials = OfficialSerializer(many=True)
+    outcome = OutcomeSerializer()
+    powerplays = PowerplaySerializer(many=True)
+    innings = InningSerializer(many=True)
+
+    class Meta:
+        model = MatchInfo
+        fields = '__all__'

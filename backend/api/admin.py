@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import MatchInfo, Team, MetaData, Official, Outcome, Inning, Delivery, Over, Extra, Wicket, Powerplay
+from .models import MatchInfo, Team, MetaData, Official, Outcome, Inning, Delivery, Over, Extra, Wicket, Powerplay,Player
 
 class OfficialInline(admin.TabularInline):
     model = Official
@@ -30,3 +30,4 @@ admin.site.register(Over)
 admin.site.register(Extra)
 admin.site.register(Wicket)
 admin.site.register(Powerplay)
+admin.site.register(Player)
