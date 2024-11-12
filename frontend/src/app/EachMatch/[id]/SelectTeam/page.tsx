@@ -1,25 +1,25 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { ArrowLeft, Info, Minus, ChevronRight, Trophy } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
-// Player component
-function PlayerCard({ 
-  player, 
-  isSelected, 
-  onToggle 
-}: { 
-  player: any
-  isSelected: boolean
-  onToggle: () => void 
+import { useEffect, useState } from "react";
+import { ArrowLeft, Info, Minus, ChevronRight, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useParams, useRouter } from "next/navigation";
+import { MatchFC, Player } from "@/types";
+import { getMatchDetail } from "@/api";
+
+function PlayerCard({
+  player,
+  isSelected,
+  onToggle,
+}: {
+  player: Player;
+  isSelected: boolean;
+  onToggle: () => void;
 }) {
-
- 
   return (
-    <div 
+    <div
       className={`flex items-center p-4 border-b cursor-pointer transition-colors ${
-        isSelected ? 'bg-green-100' : ''
+        isSelected ? "bg-green-100" : ""
       }`}
       onClick={onToggle}
     >
@@ -32,65 +32,84 @@ function PlayerCard({
         />
         <div className="flex-1">
           <h3 className="text-lg font-semibold">{player.name}</h3>
-          <p className="text-gray-600">Sel by {player.selectionPercentage}</p>
+          <p className="text-gray-600">Sel by {player.unique_name}</p>
           <div className="flex items-center mt-1">
             <div className="w-2 h-2 bg-blue-600 rounded-full mr-2" />
             <span className="text-sm text-gray-600">Played last match</span>
           </div>
         </div>
         <div className="flex items-center gap-8 ml-4">
-          <span className="text-2xl font-semibold">{player.points}</span>
-          <span className="text-2xl font-semibold">{player.credits}</span>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <span className="text-2xl font-semibold">{player.identifier}</span>
+          <Button
+            variant="ghost"
+            size="icon"
             className="w-10 h-10 rounded-full border-2 border-green-500"
           >
-            {isSelected ? <Minus className="w-6 h-6" /> : <span className="text-xl">+</span>}
+            {isSelected ? (
+              <Minus className="w-6 h-6" />
+            ) : (
+              <span className="text-xl">+</span>
+            )}
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function Component() {
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [matchData, setMatchData] = useState<MatchFC | null>(null);
+  const [playersTeamA, setPlayersTeamA] = useState<Player[]>([]);
+  const [playersTeamB, setPlayersTeamB] = useState<Player[]>([]);
+  const players = [...playersTeamA, ...playersTeamB];
+  const [loading, setLoading] = useState(true);
 
-  const players = [
-    { id: '1', name: 'H Klaasen', selectionPercentage: '62.12%', points: 53, credits: 9.0, team: 'SA' },
-    { id: '2', name: 'S Samson', selectionPercentage: '86.3%', points: 170, credits: 8.0, team: 'IND' },
-    { id: '3', name: 'R Rickelton', selectionPercentage: '29.41%', points: 55, credits: 7.0, team: 'SA' },
-    { id: '4', name: 'J Sharma', selectionPercentage: '0.52%', points: 0, credits: 6.0, team: 'IND' },
-  ]
+  const params = useParams();
+  const id = params?.id;
+
+  useEffect(() => {
+    getMatchDetail(id).then((data) => {
+      console.log(data);
+      setMatchData(data);
+      setPlayersTeamA(data.team_a.players);
+      setPlayersTeamB(data.team_b.players);
+      setLoading(false);
+    });
+  }, [id]);
 
   const togglePlayer = (playerId: string) => {
-    setSelectedPlayers(prev => 
-      prev.includes(playerId) 
-        ? prev.filter(id => id !== playerId)
+    setSelectedPlayers((prev) =>
+      prev.includes(playerId)
+        ? prev.filter((id) => id !== playerId)
         : [...prev, playerId]
-    )
-  }
+    );
+  };
 
   const selectedTeamCounts = {
-    SA: selectedPlayers.filter(id => players.find(p => p.id === id)?.team === 'SA').length,
-    IND: selectedPlayers.filter(id => players.find(p => p.id === id)?.team === 'IND').length
-  }
-  const router = useRouter()
+    team_a: selectedPlayers.filter((player) =>
+      playersTeamA.map((p) => p.identifier).includes(player)
+    ).length,
+    team_b: selectedPlayers.filter((player) =>
+      playersTeamB.map((p) => p.identifier).includes(player)
+    ).length,
+  };
+
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-gradient-to-b from-[#4a0e0e] to-[#1a1f25] text-white p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white "
-            onClick={() => router.back()}
-            aria-label="Go back"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white "
+              onClick={() => router.back()}
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </Button>
             <div>
               <h1 className="text-xl font-bold">Create Team</h1>
               <p className="text-sm text-gray-400">44h left</p>
@@ -102,33 +121,39 @@ export default function Component() {
               <span className="text-yellow-500 font-bold">G</span>
               <span className="ml-1">GURUS</span>
             </div>
-            <div className="bg-white text-black px-4 py-2 rounded-full font-bold">PTS</div>
+            <div className="bg-white text-black px-4 py-2 rounded-full font-bold">
+              PTS
+            </div>
           </div>
         </div>
 
-        <p className="text-center mb-4">Maximum of 10 players from one team</p>
+        <p className="text-center mb-4">Maximum of 9 players from one team</p>
 
         <div className="flex justify-center items-center gap-8 mb-4">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center">
-              SA
+              {matchData?.team_a.name}
             </div>
-            <span className="text-2xl font-bold">{selectedTeamCounts.SA}</span>
+            <span className="text-2xl font-bold">
+              {selectedTeamCounts.team_a}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-              IND
+              {matchData?.team_b.name}
             </div>
-            <span className="text-2xl font-bold">{selectedTeamCounts.IND}</span>
+            <span className="text-2xl font-bold">
+              {selectedTeamCounts.team_b}
+            </span>
           </div>
         </div>
 
         <div className="flex gap-1 mb-4">
           {Array.from({ length: 11 }).map((_, index) => (
-            <div 
+            <div
               key={index}
               className={`flex-1 h-2 ${
-                index < selectedPlayers.length ? 'bg-green-500' : 'bg-white'
+                index < selectedPlayers.length ? "bg-green-500" : "bg-white"
               }`}
             />
           ))}
@@ -158,19 +183,21 @@ export default function Component() {
 
       <div className="p-4 bg-white">
         <h2 className="text-center text-gray-600 mb-4">Select Players</h2>
-        
+
         <div className="grid grid-cols-[auto_1fr_auto] items-center p-4 border-b">
           <span className="text-gray-600 font-semibold">SELECTED BY</span>
-          <span className="text-center text-gray-600 font-semibold">POINTS</span>
+          <span className="text-center text-gray-600 font-semibold">
+            POINTS
+          </span>
           <span className="text-gray-600 font-semibold">CREDITS</span>
         </div>
 
-        {players.map(player => (
+        {players.map((player) => (
           <PlayerCard
-            key={player.id}
+            key={player.identifier}
             player={player}
-            isSelected={selectedPlayers.includes(player.id)}
-            onToggle={() => togglePlayer(player.id)}
+            isSelected={selectedPlayers.includes(player.identifier)}
+            onToggle={() => togglePlayer(player.identifier)}
           />
         ))}
       </div>
@@ -186,5 +213,5 @@ export default function Component() {
         </div>
       </div>
     </div>
-  )
+  );
 }
