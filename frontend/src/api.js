@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8000" + "/api/v1";
+const BASE_URL = "http://localhost:8000/backend" + "/api/v1";
 
 async function apiCall(endpoint, params = {}, token = null, options = {}) {
   const url = `${BASE_URL}/${endpoint}/`;
@@ -41,10 +41,6 @@ async function apiCall(endpoint, params = {}, token = null, options = {}) {
   }
 }
 
-export function getAllMatches(token = null, params = {}, options = {}) {
+export function getMatches(params = {},token = null, options = {}) {
   return apiCall("matches", params, token, options);
-}
-
-export function getMatchDetail(id, token = null, params = {}, options = {}) {
-  return apiCall(`matches/${id}`, params, token, options);
 }

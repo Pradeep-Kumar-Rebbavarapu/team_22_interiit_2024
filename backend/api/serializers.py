@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import MatchInfo, Team, MetaData, Official, Outcome, Inning, Delivery, Over, Extra, Wicket, Powerplay, Player
 
+# Official serializer
 class OfficialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Official
@@ -12,8 +13,14 @@ class MetaDataSerializer(serializers.ModelSerializer):
         model = MetaData
         fields = "__all__"
 
+class PlayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Player
+        fields = "__all__"
+
 # Team serializer
 class TeamSerializer(serializers.ModelSerializer):
+    players = PlayerSerializer(many=True)  # Adding players field
     class Meta:
         model = Team
         fields = "__all__"
@@ -67,30 +74,11 @@ class PowerPlaySerializer(serializers.ModelSerializer):
         model = Powerplay
         fields = "__all__"
 
+# Player serializer
+
+
 # Match serializer
 class MatchSerializer(serializers.ModelSerializer):
-    team_a = TeamSerializer()
-    team_b = TeamSerializer()
-    outcome = OutcomeSerializer()
-
-    class Meta:
-        model = MatchInfo
-        fields = "__all__"
-
-# Match Detail serializer
-class MatchDetailSerializer(serializers.ModelSerializer):
-    team_a = TeamSerializer()
-    team_b = TeamSerializer()
-    outcome = OutcomeSerializer()
-    innings = InningsSerializer(many=True)
-    powerplays = PowerPlaySerializer(many=True)
-
-    class Meta:
-        model = MatchInfo
-        fields = "__all__"
-
-# Match Players serializer
-class MatchPlayersSerializer(serializers.ModelSerializer):
     team_a = TeamSerializer()
     team_b = TeamSerializer()
     meta = MetaDataSerializer()
@@ -98,9 +86,8 @@ class MatchPlayersSerializer(serializers.ModelSerializer):
     outcome = OutcomeSerializer()
     powerplays = PowerPlaySerializer(many=True)
     innings = InningsSerializer(many=True)
+    
 
     class Meta:
         model = MatchInfo
         fields = "__all__"
-
-
