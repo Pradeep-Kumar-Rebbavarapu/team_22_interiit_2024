@@ -73,7 +73,7 @@ export interface MatchFC {
   toss_winner: string;
   target_runs: number;
   target_overs: number;
-  meta: number | Object;
+  meta: number | object;
   innings?: Inning[];
   powerplays?: Powerplay[];
 }

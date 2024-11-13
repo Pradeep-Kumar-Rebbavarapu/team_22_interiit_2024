@@ -7,17 +7,20 @@ WORKDIR /app
 # Copy the requirements file
 COPY requirements.txt .
 
-# Install the Python dependencies
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code
 COPY . .
 
-# Collect the Django static files
+# Collect static files for Django
 RUN python manage.py collectstatic --noinput
+
+# Make and apply migrations
+RUN python manage.py makemigrations && python manage.py migrate
 
 # Expose the ports
 EXPOSE 8000 8001
 
-# Start the Gunicorn server
+# Default command to run Gunicorn for HTTP requests.
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.wsgi:application", "--timeout", "15", "--preload"]
