@@ -22,17 +22,17 @@ class Command(BaseCommand):
         data_folder = os.path.join(settings.BASE_DIR, 'data', folder_name)
         json_files = [f for f in os.listdir(data_folder) if f.endswith('.json')]
         
-        for filename in tqdm(json_files, desc="Processing files"):
+        for filename in tqdm(json_files, desc="Processing files", position=0):
             file_path = os.path.join(data_folder, filename)
             try:
                 with open(file_path, 'r') as file:
                     data = json.load(file)
-                    self.stdout.write(self.style.SUCCESS(f'Processing file: {filename}'))
+                    tqdm.write(self.style.SUCCESS(f'Processing file: {filename}'))
                     self.create_match_data(data)
                     os.system('cls' if os.name == 'nt' else 'clear')
             except Exception as e:
                 logging.error(f'Failed to process file {filename}: {e}')
-                self.stdout.write(self.style.ERROR(f'Failed to process file: {filename}'))
+                tqdm.write(self.style.ERROR(f'Failed to process file: {filename}'))
 
     @transaction.atomic
     def create_match_data(self, data):
@@ -78,21 +78,24 @@ class Command(BaseCommand):
 
             # Teams and Players
             team_objs = {}
+            player_cache = {}
             for team_name, players in info.get("players", {}).items():
                 team_obj, _ = Team.objects.get_or_create(name=team_name)
                 team_objs[team_name] = team_obj
                 peoples = info.get("registry", {})['people']
                 for player_name in players:
                     identifier = peoples[player_name]
-                    player_obj = Player.objects.filter(identifier=identifier).first()
-                    if not player_obj.gender:
-                        player_obj.gender = info.get("gender")
-                        player_obj.role = random.choice(PLAYER_ROLES)
-                        player_obj.save()
-                    if not player_obj:
-                        logging.error(f'Player with identifier {identifier} not found')
-                        raise Exception(f'Player with identifier {identifier} not found')
-                    team_obj.players.add(player_obj)
+                    if identifier not in player_cache:
+                        player_obj = Player.objects.filter(identifier=identifier).first()
+                        if not player_obj:
+                            logging.error(f'Player with identifier {identifier} not found')
+                            raise Exception(f'Player with identifier {identifier} not found')
+                        if not player_obj.gender:
+                            player_obj.gender = info.get("gender")
+                            player_obj.role = random.choice(PLAYER_ROLES)
+                            player_obj.save()
+                        player_cache[identifier] = player_obj
+                    team_obj.players.add(player_cache[identifier])
                 tqdm.write(self.style.SUCCESS(f'Team and players for {team_name} created or retrieved'))
 
             # Set teams for MatchInfo
@@ -142,11 +145,22 @@ class Command(BaseCommand):
                     )
                     overs.append(over)
                     for delivery_data in over_data.get("deliveries", []):
+                        batter_name = delivery_data.get("batter", "")
+                        bowler_name = delivery_data.get("bowler", "")
+                        non_striker_name = delivery_data.get("non_striker", "")
+
+                        if batter_name not in player_cache:
+                            player_cache[batter_name] = Player.objects.filter(name=batter_name).first()
+                        if bowler_name not in player_cache:
+                            player_cache[bowler_name] = Player.objects.filter(name=bowler_name).first()
+                        if non_striker_name not in player_cache:
+                            player_cache[non_striker_name] = Player.objects.filter(name=non_striker_name).first()
+
                         delivery = Delivery(
                             over=over,
-                            batter=delivery_data.get("batter", ""),
-                            bowler=delivery_data.get("bowler", ""),
-                            non_striker=delivery_data.get("non_striker", ""),
+                            batter=player_cache[batter_name],
+                            bowler=player_cache[bowler_name],
+                            non_striker=player_cache[non_striker_name],
                             batter_runs=delivery_data.get("runs", {}).get("batter", 0),
                             extras_runs=delivery_data.get("runs", {}).get("extras", 0),
                             total_runs=delivery_data.get("runs", {}).get("total", 0)
@@ -167,12 +181,13 @@ class Command(BaseCommand):
                         if 'wicket' in delivery_data:
                             wicket_data = delivery_data["wicket"]
                             fielder_name = wicket_data.get("fielders", [None])[0]
-                            fielder_obj = Player.objects.filter(name=fielder_name).first() if fielder_name else None
+                            if fielder_name not in player_cache:
+                                player_cache[fielder_name] = Player.objects.filter(name=fielder_name).first() if fielder_name else None
                             wicket = Wicket(
                                 delivery=delivery,
                                 kind=wicket_data.get("kind", ""),
                                 player_out=wicket_data.get("player_out", ""),
-                                fielder=fielder_obj
+                                fielder=player_cache[fielder_name]
                             )
                             wickets.append(wicket)
                 tqdm.write(self.style.SUCCESS(f'Inning and overs for team {inning_data.get("team", "")} created'))

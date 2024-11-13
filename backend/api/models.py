@@ -50,7 +50,9 @@ class MatchInfo(models.Model):
     venue = models.CharField(max_length=100)
     player_of_match = models.CharField(max_length=100)
     team_a = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_a', null=True, blank=True)
+    team_a_players = models.ManyToManyField('Player', related_name='team_a_matches', blank=True)
     team_b = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_b', null=True, blank=True)
+    team_b_players = models.ManyToManyField('Player', related_name='team_b_matches', blank=True)
     toss_decision = models.CharField(max_length=10)
     toss_winner = models.CharField(max_length=100)
     target_runs = models.IntegerField(null=True, blank=True)
@@ -141,9 +143,9 @@ class Inning(models.Model):
 # Delivery details
 class Delivery(models.Model):
     over = models.ForeignKey('Over', on_delete=models.CASCADE, related_name='deliveries')
-    batter = models.CharField(max_length=100)
-    bowler = models.CharField(max_length=100)
-    non_striker = models.CharField(max_length=100)
+    batter = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='deliveries_faced')
+    bowler = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='deliveries_bowled')
+    non_striker = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='deliveries_non_striker')
     batter_runs = models.IntegerField()
     extras_runs = models.IntegerField(default=0)
     total_runs = models.IntegerField()
@@ -205,3 +207,19 @@ class Powerplay(models.Model):
     class Meta:
         verbose_name = "Powerplay"
         verbose_name_plural = "Powerplays"
+
+
+class Chat(models.Model):
+    match = models.ForeignKey(MatchInfo, on_delete=models.CASCADE, related_name="chats")
+
+    def __str__(self):
+        return f"Chat of {self.name}"
+
+
+class Message(models.Model):
+    chat = models.ForeignKey("Chat", on_delete=models.CASCADE, related_name="messages")
+    text = models.TextField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Message {self.id}"

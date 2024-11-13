@@ -1,6 +1,6 @@
 from rest_framework import generics
-from .serializers import MatchSerializer, MatchDetailSerializer
-from .models import MatchInfo
+from .serializers import MatchSerializer, MatchDetailSerializer, ChatSerializer, MessageSerializer
+from .models import MatchInfo, Chat, Message
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -24,3 +24,13 @@ class MatchDetail(generics.RetrieveUpdateAPIView):
     queryset = MatchInfo.objects.all()
     serializer_class = MatchDetailSerializer
 
+
+class ChatList(generics.ListCreateAPIView):
+    queryset = Chat.objects.all()
+    serializer_class = ChatSerializer
+
+
+class ChatDetail(generics.RetrieveAPIView):
+    queryset = Chat.objects.all()
+    lookup_field = 'match'
+    serializer_class = ChatSerializer
