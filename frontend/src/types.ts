@@ -2,6 +2,7 @@ export interface Player {
   name: string;
   unique_name: string;
   identifier: string;
+  role: string;
 }
 
 export interface Team {

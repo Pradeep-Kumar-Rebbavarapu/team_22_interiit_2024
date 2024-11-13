@@ -2,10 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import MatchCard from "@/components/MatchCard";
-import { getAllMatches } from "@/api";
+import { getMatches } from "@/api";
 
 export default async function Component() {
-  const matches = await getAllMatches();
+  const matches = await getMatches({limit:20});
   return (
     <div className=" h-full bg-gradient-to-b from-red-900 to-red-800">
       {/* Header */}
