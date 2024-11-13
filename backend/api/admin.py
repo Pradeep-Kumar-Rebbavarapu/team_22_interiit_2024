@@ -33,6 +33,7 @@ class PowerplayInline(admin.TabularInline):
 class MatchInfoAdmin(admin.ModelAdmin):
     inlines = [OfficialInline, OutcomeInline, InningInline, PowerplayInline]
     list_display = ('match_type', 'date', 'team_a', 'team_b', 'venue')
+    list_filter = ('team_type', 'match_type')
     search_fields = ('team_a__name', 'team_b__name', 'venue')
 
 @admin.register(Inning)

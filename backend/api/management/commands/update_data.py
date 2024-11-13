@@ -79,6 +79,7 @@ class Command(BaseCommand):
             # Teams and Players
             team_objs = {}
             player_cache = {}
+
             for team_name, players in info.get("players", {}).items():
                 team_obj, _ = Team.objects.get_or_create(name=team_name)
                 team_objs[team_name] = team_obj
@@ -132,6 +133,9 @@ class Command(BaseCommand):
             deliveries = []
             extras = []
             wickets = []
+
+            player_scores = {key: {"runs": 0, "wickets": 0, "balls_played": 0, "balls_delivered": 0, "not_out": False, "strike_rate": 0, "runs_taken": 0, "economy": 0, "catches": 0, "stumpings": 0} for key, value in player_cache.items()}
+
             for inning_data in data.get("innings", []):
                 inning = Inning(
                     match_info=match_info,
@@ -145,9 +149,37 @@ class Command(BaseCommand):
                     )
                     overs.append(over)
                     for delivery_data in over_data.get("deliveries", []):
-                        batter_name = delivery_data.get("batter", "")
-                        bowler_name = delivery_data.get("bowler", "")
-                        non_striker_name = delivery_data.get("non_striker", "")
+                        batter_name, bowler_name, non_striker_name = (
+                            delivery_data.get("batter", ""),
+                            delivery_data.get("bowler", ""),
+                            delivery_data.get("non_striker", "")
+                        )
+                        batter_runs, extras_runs, total_runs = (
+                            delivery_data.get("runs", {}).get("batter", 0),
+                            delivery_data.get("runs", {}).get("extras", 0),
+                            delivery_data.get("runs", {}).get("total", 0)
+                        )
+
+                        # Update player scores
+                        player_scores[peoples[batter_name]]["runs"] += batter_runs
+                        player_scores[peoples[bowler_name]]["runs_taken"] += total_runs
+
+                        if('wicket' in delivery_data):
+                            player_scores[peoples[batter_name]]["wickets"] += 1
+                            player_scores[peoples[delivery_data["wicket"]["player_out"]]]["not_out"] = False
+                            
+                            if(delivery_data["kind"] == "caught"):
+                                for fielder in delivery_data["wicket"]["fielders"]:
+                                    player_scores[peoples[fielder["name"]]]["catches"] += 1
+                            elif(delivery_data["kind"] == "stumped"):
+                                for fielder in delivery_data["wicket"]["fielders"]:
+                                    player_scores[peoples[fielder["name"]]]["stumpings"] += 1
+
+                        if(not (delivery_data.get("extras", None) and (delivery_data.wides  or delivery_data.noballs))):
+                            player_scores[peoples[batter_name]]["balls_played"] += 1
+                            player_scores[peoples[bowler_name]]["balls_delivered"] += 1
+
+                        
 
                         if batter_name not in player_cache:
                             player_cache[batter_name] = Player.objects.filter(name=batter_name).first()

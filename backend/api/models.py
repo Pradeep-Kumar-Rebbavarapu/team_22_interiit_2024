@@ -43,6 +43,8 @@ class MatchInfo(models.Model):
     date = models.DateField()
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     match_type = models.CharField(max_length=10, choices=MATCH_TYPE_CHOICES)
+    team_type = models.CharField(max_length=50)
+    players_data = models.JSONField()
     match_type_number = models.IntegerField()
     overs = models.IntegerField()
     season = models.CharField(max_length=20)
