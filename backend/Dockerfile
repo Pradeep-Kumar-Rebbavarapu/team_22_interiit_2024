@@ -5,13 +5,13 @@ FROM python:3.12
 WORKDIR /app
 
 # Copy the requirements file
-COPY requirements.txt .
+COPY requirements.txt /app/requirements.txt
 
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code
-COPY . .
+COPY . /app/
 
 # Collect the Django static files
 RUN python manage.py collectstatic --noinput

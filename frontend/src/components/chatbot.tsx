@@ -14,10 +14,16 @@ import {
 } from "lucide-react";
 import { webSocketConnection } from "@/lib/websockets";
 
+interface Message {
+  id: string;
+  text: string;
+  isUser: boolean;
+}
+
 export default function Dream11AIChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [chatHistory, setChatHistory] = useState<string[]>([]);
+  const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const toggleChat = () => setIsOpen(!isOpen);
@@ -25,13 +31,21 @@ export default function Dream11AIChat() {
   const handleSend = () => {
     if (input.trim()) {
       const text = input.trim();
-      setChatHistory([...chatHistory, text]);
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        text,
+        isUser: true,
+      };
+      setChatHistory([...chatHistory, userMessage]);
       setInput("");
       // Simulate AI response
       setTimeout(() => {
-        const text =
-          "Thank you for your message. I'm processing your request and will provide assistance shortly.";
-        setChatHistory((prev) => [...prev, text]);
+        const aiMessage: Message = {
+          id: Date.now().toString(),
+          text: "Thank you for your message. I'm processing your request and will provide assistance shortly.",
+          isUser: false,
+        };
+        setChatHistory((prev) => [...prev, aiMessage]);
       }, 1000);
     }
   };

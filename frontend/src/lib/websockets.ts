@@ -3,6 +3,7 @@ const websocketURL = "ws://127.0.0.1" + "/chat";
 class WebSocketHandler {
   private socket: WebSocket;
   private url: string;
+  private addMessage: () => void = () => 0;
 
   constructor(url: string) {
     this.url = url;
@@ -22,7 +23,7 @@ class WebSocketHandler {
   }
 
   private onMessage(event: MessageEvent) {
-    console.log("WebSocket message received:", event.data);
+    console.log("Message received: ", event.data);
   }
 
   private onError(event: Event) {
