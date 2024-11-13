@@ -1,5 +1,5 @@
-from django.urls import path,include
-from .views import MatchList
+from django.urls import path
+from .views import MatchList, MatchDetail, ChatList, ChatDetail
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 
