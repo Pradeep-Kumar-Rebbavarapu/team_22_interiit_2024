@@ -1,11 +1,20 @@
-'use client'
+"use client";
 
-import { useState } from "react"
-import { ArrowLeft, Info, Minus, ChevronRight, Trophy, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
-import { MatchFC, Player } from "@/types"
-import Link from "next/link"
+import { useState } from "react";
+import {
+  ArrowLeft,
+  Info,
+  Minus,
+  ChevronRight,
+  Trophy,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { MatchFC, Player } from "@/types";
+import Link from "next/link";
 
 function PlayerCard({
   player,
@@ -13,10 +22,10 @@ function PlayerCard({
   onToggle,
   isPredicted = false,
 }: {
-  player: Player
-  isSelected: boolean
-  onToggle: () => void
-  isPredicted?: boolean
+  player: Player;
+  isSelected: boolean;
+  onToggle: () => void;
+  isPredicted?: boolean;
 }) {
   return (
     <div
@@ -33,15 +42,21 @@ function PlayerCard({
           className="w-12 h-12 sm:w-20 sm:h-20 rounded-lg object-cover mr-3 sm:mr-4"
         />
         <div className="flex-1 min-w-0">
-          <h3 className="text-base sm:text-lg font-semibold truncate">{player?.name}</h3>
+          <h3 className="text-base sm:text-lg font-semibold truncate">
+            {player?.name}
+          </h3>
           <p className="text-sm text-gray-600">{player?.role}</p>
           <div className="flex items-center mt-1">
             <div className="w-2 h-2 bg-blue-600 rounded-full mr-2" />
-            <span className="text-xs sm:text-sm text-gray-600">Played last match</span>
+            <span className="text-xs sm:text-sm text-gray-600">
+              Played last match
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-8 ml-2 sm:ml-4">
-          <span className="text-lg sm:text-2xl font-semibold">{player.identifier}</span>
+          <span className="text-lg sm:text-2xl font-semibold">
+            {player.identifier}
+          </span>
           <Button
             variant="ghost"
             size="icon"
@@ -56,34 +71,42 @@ function PlayerCard({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Simulated API call
 const predictPlayers = async (players: Player[]): Promise<Player[]> => {
-  await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate 2 second delay
-  return players.slice(0, 11) // Return first 11 players as predicted
-}
+  await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate 2 second delay
+  return players.slice(0, 11); // Return first 11 players as predicted
+};
 
-export default function Component({ matchData, id }: { matchData: MatchFC, id: number }) {
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
-  const [activeTab, setActiveTab] = useState<'batters' | 'bowlers' | 'allRounders' | 'wicketKeepers'>('batters')
-  const [showPredictedPlayers, setShowPredictedPlayers] = useState(false)
-  const [predictedPlayers, setPredictedPlayers] = useState<Player[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isPredictedSectionOpen, setIsPredictedSectionOpen] = useState(true)
+export default function Component({
+  matchData,
+  id,
+}: {
+  matchData: MatchFC;
+  id: number;
+}) {
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<
+    "batters" | "bowlers" | "allRounders" | "wicketKeepers"
+  >("batters");
+  const [showPredictedPlayers, setShowPredictedPlayers] = useState(false);
+  const [predictedPlayers, setPredictedPlayers] = useState<Player[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPredictedSectionOpen, setIsPredictedSectionOpen] = useState(true);
 
-  const playersTeamA = matchData.team_a.players
-  const playersTeamB = matchData.team_b.players
-  const players = [...playersTeamA, ...playersTeamB]
+  const playersTeamA = matchData.team_a.players;
+  const playersTeamB = matchData.team_b.players;
+  const players = [...playersTeamA, ...playersTeamB];
 
   const togglePlayer = (playerId: string) => {
     setSelectedPlayers((prev) =>
       prev.includes(playerId)
         ? prev.filter((id) => id !== playerId)
         : [...prev, playerId]
-    )
-  }
+    );
+  };
 
   const selectedTeamCounts = {
     team_a: selectedPlayers.filter((player) =>
@@ -92,43 +115,43 @@ export default function Component({ matchData, id }: { matchData: MatchFC, id: n
     team_b: selectedPlayers.filter((player) =>
       playersTeamB.map((p) => p.identifier).includes(player)
     ).length,
-  }
+  };
 
   const filteredPlayers = players.filter((player) => {
     switch (activeTab) {
-      case 'batters':
-        return player.role === 'BAT'
-      case 'bowlers':
-        return player.role === 'BOWL'
-      case 'allRounders':
-        return player.role === 'AR'
-      case 'wicketKeepers':
-        return player.role === 'WK'
+      case "batters":
+        return player.role === "BAT";
+      case "bowlers":
+        return player.role === "BOWL";
+      case "allRounders":
+        return player.role === "AR";
+      case "wicketKeepers":
+        return player.role === "WK";
       default:
-        return true
+        return true;
     }
-  })
+  });
 
   const handlePredictPlayers = async () => {
-    setIsLoading(true)
-    setShowPredictedPlayers(true)
-    setIsPredictedSectionOpen(true)
+    setIsLoading(true);
+    setShowPredictedPlayers(true);
+    setIsPredictedSectionOpen(true);
     try {
-      const predicted = await predictPlayers(players)
-      setPredictedPlayers(predicted)
+      const predicted = await predictPlayers(players);
+      setPredictedPlayers(predicted);
     } catch (error) {
-      console.error("Failed to predict players:", error)
+      console.error("Failed to predict players:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleUseThisTeam = () => {
-    setSelectedPlayers(predictedPlayers.map(player => player.identifier))
-    setIsPredictedSectionOpen(false)
-  }
+    setSelectedPlayers(predictedPlayers.map((player) => player.identifier));
+    setIsPredictedSectionOpen(false);
+  };
 
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -161,7 +184,9 @@ export default function Component({ matchData, id }: { matchData: MatchFC, id: n
           </div>
         </div>
 
-        <p className="text-center mb-3 sm:mb-4 text-xs sm:text-sm">Maximum of 9 players from one team</p>
+        <p className="text-center mb-3 sm:mb-4 text-xs sm:text-sm">
+          Maximum of 9 players from one team
+        </p>
 
         <div className="flex justify-center items-center gap-4 sm:gap-8 mb-3 sm:mb-4">
           <div className="flex items-center gap-2">
@@ -223,10 +248,11 @@ export default function Component({ matchData, id }: { matchData: MatchFC, id: n
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Predicting Players...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Predicting
+              Players...
             </>
           ) : (
-            'Predict Players'
+            "Predict Players"
           )}
         </Button>
 
@@ -236,13 +262,19 @@ export default function Component({ matchData, id }: { matchData: MatchFC, id: n
               className="flex justify-between items-center bg-yellow-100 p-3 sm:p-4 cursor-pointer"
               onClick={() => setIsPredictedSectionOpen(!isPredictedSectionOpen)}
             >
-              <h2 className="text-base sm:text-lg font-semibold">Predicted Players (11)</h2>
+              <h2 className="text-base sm:text-lg font-semibold">
+                Predicted Players (11)
+              </h2>
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-yellow-600 hover:text-yellow-700"
               >
-                {isPredictedSectionOpen ? <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" /> : <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />}
+                {isPredictedSectionOpen ? (
+                  <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                )}
               </Button>
             </div>
             {isPredictedSectionOpen && (
@@ -270,11 +302,11 @@ export default function Component({ matchData, id }: { matchData: MatchFC, id: n
         )}
 
         <div className="mb-3 sm:mb-4 flex flex-wrap gap-2">
-          {['batters', 'bowlers', 'allRounders', 'wicketKeepers'].map((tab) => (
+          {["batters", "bowlers", "allRounders", "wicketKeepers"].map((tab) => (
             <button
               key={tab}
               className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm ${
-                activeTab === tab ? 'bg-green-500 text-white' : 'bg-gray-200'
+                activeTab === tab ? "bg-green-500 text-white" : "bg-gray-200"
               }`}
               onClick={() => setActiveTab(tab as typeof activeTab)}
             >
@@ -295,18 +327,19 @@ export default function Component({ matchData, id }: { matchData: MatchFC, id: n
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-3 sm:p-4">
         <div className="flex justify-between max-w-3xl mx-auto">
-          <Link href={`/EachMatch/${id}/PREVIEW`} className="w-full h-full mr-2">
-            <Button variant="outline" className="w-full h-full bg-gray-100 text-xs sm:text-sm">
+          <Link
+            href={`/EachMatch/${id}/PREVIEW`}
+            className="w-full h-full mr-2"
+          >
+            <Button
+              variant="outline"
+              className="w-full h-full bg-gray-100 text-xs sm:text-sm"
+            >
               PREVIEW
-            </Button>
-          </Link>
-          <Link href={`/EachMatch/${id}/AI`} className="w-full h-full ml-2">
-            <Button variant="outline" className="w-full h-full bg-gray-100 text-xs sm:text-sm">
-              ASK AI
             </Button>
           </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }
