@@ -11,10 +11,8 @@ import sqlite3
 import google.generativeai as genai
 from typing import Any, List, Tuple, Dict, Union,Optional
 import re
-
-GOOGLE_API_KEY = "AIzaSyAHljbMCfSFRLNPCiUwlBWJq1HgIdSwF4c"
-WEATHER_API_KEY = "ZWUJRENGDYL5EZ84H58KTNDRL"
-os.environ['FAL_KEY'] = "1aee66d3-b1e9-43ef-a9bf-08b132a17c0b:a4e829e41179274d96d7346d4a4e10bd"
+from backend.settings import FAL_KEY,GOOGLE_API_KEY,WEATHER_API_KEY
+os.environ['FAL_KEY'] = FAL_KEY
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
