@@ -12,6 +12,6 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput
 
-EXPOSE 8000 8001
+EXPOSE 8088 8001
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8088", "backend.wsgi:application", "--timeout", "15", "--preload"]
