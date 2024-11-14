@@ -1,4 +1,9 @@
-const websocketURL = "ws://127.0.0.1:8000/ws/chat/"
+const MODE = process.env.NEXT_PUBLIC_MODE
+let websocketURL = "ws://127.0.0.1:8000/ws/chat/"
+if(MODE == "PROD"){
+  const websocketURL = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
+}
+
 
 class WebSocketHandler {
   private socket: WebSocket;

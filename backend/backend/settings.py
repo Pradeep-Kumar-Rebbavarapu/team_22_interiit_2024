@@ -12,20 +12,34 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+from django.core.exceptions import ImproperlyConfigured
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / ".env")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_8a&a1-h1+a!d)m@@tnswgqc_q&v5!uizbeed%5bux$yrry4vr'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = ['172.27.80.1','172.16.4.2','localhost','127.0.0.1']
+if not DEBUG:
+    ALLOWED_HOSTS = ['172.27.80.1','localhost','127.0.0.1']
+    HOST_URL = env('HOST_URL')
+    if HOST_URL:
+        ALLOWED_HOSTS.append(HOST_URL)
+        CSRF_TRUSTED_ORIGINS = [f"https://{HOST_URL}","http://127.0.0.1:8000","http://localhost:8000","http://172.27.80.1:8000"]
+    else:
+        raise ImproperlyConfigured("HOST_URL environment variable is not set")
+else:
+    ALLOWED_HOSTS = ['localhost','127.0.0.1','interiit2024.iiti.ac.in','172.27.80.1']
+
+# Application definition
+CSRF_TRUSTED_ORIGINS = ["https://interiit2024.iiti.ac.in","http://127.0.0.1:8000","http://localhost:8000","http://172.27.80.1:8000"]
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition

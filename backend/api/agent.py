@@ -231,179 +231,179 @@ You are a knowledgeable assistant that can handle various types of queries. Anal
     "Thought": "Your analysis of what needs to be done",
     "Action": "SearchDB or Calculator or DirectResponse",
     "Action Input": "Your SQL query or calculation or None for direct responses",
-    "Response Format" : "Your Response"
+    "Response Format": {
+        "template": "Your response template with placeholders using col0, col1, etc.",
+        "style": "default/table/list/detailed",
+        "metadata": {
+            "column_names": ["optional", "list", "of", "column", "names"],
+            "description": "Optional description of the data"
+        }
+    }
+}
+
+Examples:
+
+User: "Is Rohit Sharma male or female?"
+{
+    "Thought": "Need to check the gender information from the player database",
+    "Action": "SearchDB",
+    "Action Input": "SELECT name, gender FROM api_player WHERE name LIKE '%Rohit Sharma%'",
+    "Response Format": {
+        "template": "{col0} is {col1}.",
+        "style": "default",
+        "metadata": {
+            "column_names": ["name", "gender"]
+        }
+    }
+}
+
+User: "Show me the top 5 players by runs"
+{
+    "Thought": "Need to get top 5 batters and their run totals",
+    "Action": "SearchDB",
+    "Action Input": "SELECT p.name, SUM(d.batter_runs) as runs FROM api_delivery d JOIN api_player p ON d.batter_id = p.id GROUP BY p.name ORDER BY runs DESC LIMIT 5",
+    "Response Format": {
+        "template": "Top 5 Run Scorers:\n{table_data}",
+        "style": "table",
+        "metadata": {
+            "column_names": ["Player Name", "Total Runs"]
+        }
+    }
+}
+
+User: "List all teams"
+{
+    "Thought": "Need to fetch all team names from the database",
+    "Action": "SearchDB",
+    "Action Input": "SELECT name FROM api_team",
+    "Response Format": {
+        "template": "Teams:\n{list_data}",
+        "style": "list",
+        "metadata": {
+            "column_names": ["Team Name"]
+        }
+    }
+}
+
+Remember:
+- Always use col0, col1, etc. in templates for positional data
+- Provide clear column names in metadata when possible
+- Use appropriate style for data presentation
+- Consider readability and formatting in the response
 
 Begin!
 '''
-#     "Response Format": {
-#         "template": "Your response template with placeholders using col0, col1, etc.",
-#         "style": "default/table/list/detailed",
-#         "metadata": {
-#             "column_names": ["optional", "list", "of", "column", "names"],
-#             "description": "Optional description of the data"
-#         }
-#     }
-# }
-
-# Examples:
-
-# User: "Is Rohit Sharma male or female?"
-# {
-#     "Thought": "Need to check the gender information from the player database",
-#     "Action": "SearchDB",
-#     "Action Input": "SELECT name, gender FROM api_player WHERE name LIKE '%Rohit Sharma%'",
-#     "Response Format": {
-#         "template": "{col0} is {col1}.",
-#         "style": "default",
-#         "metadata": {
-#             "column_names": ["name", "gender"]
-#         }
-#     }
-# }
-
-# User: "Show me the top 5 players by runs"
-# {
-#     "Thought": "Need to get top 5 batters and their run totals",
-#     "Action": "SearchDB",
-#     "Action Input": "SELECT p.name, SUM(d.batter_runs) as runs FROM api_delivery d JOIN api_player p ON d.batter_id = p.id GROUP BY p.name ORDER BY runs DESC LIMIT 5",
-#     "Response Format": {
-#         "template": "Top 5 Run Scorers:\n{table_data}",
-#         "style": "table",
-#         "metadata": {
-#             "column_names": ["Player Name", "Total Runs"]
-#         }
-#     }
-# }
-
-# User: "List all teams"
-# {
-#     "Thought": "Need to fetch all team names from the database",
-#     "Action": "SearchDB",
-#     "Action Input": "SELECT name FROM api_team",
-#     "Response Format": {
-#         "template": "Teams:\n{list_data}",
-#         "style": "list",
-#         "metadata": {
-#             "column_names": ["Team Name"]
-#         }
-#     }
-# }
-
-# Remember:
-# - Always use col0, col1, etc. in templates for positional data
-# - Provide clear column names in metadata when possible
-# - Use appropriate style for data presentation
-# - Consider readability and formatting in the response
-
-
-
-# def create_table(data: List[Tuple], headers: List[str]) -> str:
-#     """Creates a formatted table from data"""
-#     if not data:
-#         return "No data available"
     
-#     # Use provided headers or generate default ones
-#     headers = headers or [f"Column {i+1}" for i in range(len(data[0]))]
+
+
+
+def create_table(data: List[Tuple], headers: List[str]) -> str:
+    """Creates a formatted table from data"""
+    if not data:
+        return "No data available"
     
-#     # Calculate column widths
-#     col_widths = [len(str(h)) for h in headers]
-#     for row in data:
-#         for i, val in enumerate(row):
-#             col_widths[i] = max(col_widths[i], len(str(val)))
+    # Use provided headers or generate default ones
+    headers = headers or [f"Column {i+1}" for i in range(len(data[0]))]
     
-#     # Create header
-#     header = " | ".join(str(h).ljust(col_widths[i]) for i, h in enumerate(headers))
-#     separator = "-" * len(header)
+    # Calculate column widths
+    col_widths = [len(str(h)) for h in headers]
+    for row in data:
+        for i, val in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(str(val)))
     
-#     # Create rows
-#     rows = []
-#     for row in data:
-#         formatted_row = " | ".join(str(val).ljust(col_widths[i]) for i, val in enumerate(row))
-#         rows.append(formatted_row)
+    # Create header
+    header = " | ".join(str(h).ljust(col_widths[i]) for i, h in enumerate(headers))
+    separator = "-" * len(header)
     
-#     return f"{header}\n{separator}\n" + "\n".join(rows)
-
-# def create_list(data: List[Tuple], header: str = None) -> str:
-#     """Creates a formatted list from data"""
-#     result = []
-#     if header:
-#         result.append(header)
-#     result.extend(f"- {item[0]}" if isinstance(item, tuple) else f"- {item}" for item in data)
-#     return "\n".join(result)
-
-# def sanitize_input(text: str) -> str:
-#     """
-#     Removes or escapes problematic control characters in strings.
+    # Create rows
+    rows = []
+    for row in data:
+        formatted_row = " | ".join(str(val).ljust(col_widths[i]) for i, val in enumerate(row))
+        rows.append(formatted_row)
     
-#     Args:
-#         text: String potentially containing control characters.
+    return f"{header}\n{separator}\n" + "\n".join(rows)
+
+def create_list(data: List[Tuple], header: str = None) -> str:
+    """Creates a formatted list from data"""
+    result = []
+    if header:
+        result.append(header)
+    result.extend(f"- {item[0]}" if isinstance(item, tuple) else f"- {item}" for item in data)
+    return "\n".join(result)
+
+def sanitize_input(text: str) -> str:
+    """
+    Removes or escapes problematic control characters in strings.
     
-#     Returns:
-#         Sanitized string.
-#     """
-#     # Replace control characters (like newlines, tabs) with empty strings
-#     return re.sub(r'[\x00-\x1f\x7f-\x9f]', '', text)
-
-# def format_response(data: Union[List[Tuple], Tuple[Any]], response_format: Dict) -> str:
-#     """
-#     Formats the response according to the specified template and style.
+    Args:
+        text: String potentially containing control characters.
     
-#     Args:
-#         data: Query results or calculated values.
-#         response_format: Dictionary containing template, style, and metadata.
+    Returns:
+        Sanitized string.
+    """
+    # Replace control characters (like newlines, tabs) with empty strings
+    return re.sub(r'[\x00-\x1f\x7f-\x9f]', '', text)
+
+def format_response(data: Union[List[Tuple], Tuple[Any]], response_format: Dict) -> str:
+    """
+    Formats the response according to the specified template and style.
     
-#     Returns:
-#         Formatted response string.
-#     """
-#     if not data:
-#         return "No data available for this query."
+    Args:
+        data: Query results or calculated values.
+        response_format: Dictionary containing template, style, and metadata.
+    
+    Returns:
+        Formatted response string.
+    """
+    if not data:
+        return "No data available for this query."
 
-#     try:
-#         # Sanitize response format inputs
-#         template = sanitize_input(response_format.get("template", "{data}"))
-#         style = response_format.get("style", "default")
-#         metadata = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in response_format.get("metadata", {}).items()}
-#         column_names = metadata.get("column_names", [])
+    try:
+        # Sanitize response format inputs
+        template = sanitize_input(response_format.get("template", "{data}"))
+        style = response_format.get("style", "default")
+        metadata = {k: sanitize_input(v) if isinstance(v, str) else v for k, v in response_format.get("metadata", {}).items()}
+        column_names = metadata.get("column_names", [])
 
-#         # Convert single tuple to list of tuples for consistent handling
-#         if isinstance(data, tuple):
-#             data = [data]
+        # Convert single tuple to list of tuples for consistent handling
+        if isinstance(data, tuple):
+            data = [data]
 
-#         # Handle different response styles
-#         if style == "table":
-#             table_str = create_table(data, column_names)
-#             return template.format(table_data=table_str)
+        # Handle different response styles
+        if style == "table":
+            table_str = create_table(data, column_names)
+            return template.format(table_data=table_str)
 
-#         elif style == "list":
-#             header = metadata.get("description", "")
-#             list_str = create_list(data, header)
-#             return template.format(list_data=list_str)
+        elif style == "list":
+            header = metadata.get("description", "")
+            list_str = create_list(data, header)
+            return template.format(list_data=list_str)
 
-#         else:  # default style
-#             # Create a dictionary with positional keys (col0, col1, etc.)
-#             result_dict = {}
-#             row = data[0]  # Use first row for single-row responses
-#             for i, value in enumerate(row):
-#                 # Format numbers nicely
-#                 if isinstance(value, float):
-#                     formatted_value = f"{value:.2f}"
-#                 else:
-#                     formatted_value = str(value)
-#                 result_dict[f"col{i}"] = formatted_value
+        else:  # default style
+            # Create a dictionary with positional keys (col0, col1, etc.)
+            result_dict = {}
+            row = data[0]  # Use first row for single-row responses
+            for i, value in enumerate(row):
+                # Format numbers nicely
+                if isinstance(value, float):
+                    formatted_value = f"{value:.2f}"
+                else:
+                    formatted_value = str(value)
+                result_dict[f"col{i}"] = formatted_value
 
-#             # Add any additional metadata if needed
-#             for key, value in metadata.items():
-#                 if key not in ["column_names", "description"]:
-#                     result_dict[key] = value
+            # Add any additional metadata if needed
+            for key, value in metadata.items():
+                if key not in ["column_names", "description"]:
+                    result_dict[key] = value
 
-#             return template.format(**result_dict)
+            return template.format(**result_dict)
 
-#     except KeyError as e:
-#         # Return a more helpful error message
-#         missing_key = str(e).strip("'")
-#         return f"Error: Missing data for placeholder '{missing_key}'. Available keys: {', '.join(result_dict.keys())}"
-#     except Exception as e:
-#         return f"Error formatting response: {str(e)}"
+    except KeyError as e:
+        # Return a more helpful error message
+        missing_key = str(e).strip("'")
+        return f"Error: Missing data for placeholder '{missing_key}'. Available keys: {', '.join(result_dict.keys())}"
+    except Exception as e:
+        return f"Error formatting response: {str(e)}"
 
 def agentAI(message: str) -> str:
     """Main function to process queries and return responses"""
