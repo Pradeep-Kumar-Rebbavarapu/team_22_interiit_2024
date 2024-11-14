@@ -1,8 +1,5 @@
-let BASE_URL = "http://127.0.0.1:8000/backend" + "/api/v1";
-const MODE = process.env.NEXT_PUBLIC_MODE
-if(MODE=="PROD"){
-  BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL + "/api/v1";
-}
+// const BASE_URL = "http://127.0.0.1:8000/backend" + "/api/v1";
+const BASE_URL = "http://172.16.4.2:8080/backend" + "/api/v1";
 
 async function apiCall(endpoint, params = {}, token = null, options = {}) {
   const url = `${BASE_URL}/${endpoint}/`;
