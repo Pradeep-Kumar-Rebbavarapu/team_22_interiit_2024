@@ -25,6 +25,19 @@ export default function Dream11AIChat() {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const addMessage = (message: string) => {
+    console.log("message");
+    console.log(message);
+    const aiMessage: Message = {
+      id: Date.now().toString(),
+      text: message,
+      isUser: false,
+    };
+    setChatHistory((prev) => [...prev, aiMessage]);
+  };
+
+  webSocketConnection.addMessage = addMessage;
+
   const toggleChat = () => setIsOpen(!isOpen);
 
   const handleSend = () => {
@@ -36,16 +49,8 @@ export default function Dream11AIChat() {
         isUser: true,
       };
       setChatHistory([...chatHistory, userMessage]);
+      webSocketConnection.sendMessage(userMessage.text);
       setInput("");
-      // Simulate AI response
-      setTimeout(() => {
-        const aiMessage: Message = {
-          id: Date.now().toString(),
-          text: "Thank you for your message. I'm processing your request and will provide assistance shortly.",
-          isUser: false,
-        };
-        setChatHistory((prev) => [...prev, aiMessage]);
-      }, 1000);
     }
   };
 

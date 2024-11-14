@@ -1,9 +1,9 @@
-const websocketURL = "ws://127.0.0.1" + "/chat";
+const websocketURL = "ws://127.0.0.1:8000" + "/ws/chat/";
 
 class WebSocketHandler {
   private socket: WebSocket;
   private url: string;
-  private addMessage: () => void = () => 0;
+  public addMessage: (message: string) => void = () => 0;
 
   constructor(url: string) {
     this.url = url;
@@ -24,6 +24,8 @@ class WebSocketHandler {
 
   private onMessage(event: MessageEvent) {
     console.log("Message received: ", event.data);
+    const data = JSON.parse(event.data);
+    this.addMessage(data.message);
   }
 
   private onError(event: Event) {
