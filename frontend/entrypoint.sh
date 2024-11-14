@@ -4,4 +4,4 @@
 npm run build
 
 # Start the production server on port 3033
-npm run start -- -p 3033
+npm run start
