@@ -39,9 +39,10 @@ if not DEBUG:
         raise ImproperlyConfigured("HOST_URL environment variable is not set")
 else:
     ALLOWED_HOSTS = ['localhost','127.0.0.1','interiit2024.iiti.ac.in','172.27.80.1']
+    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://172.27.80.1:8000"]
 
 # Application definition
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://172.27.80.1:8000"]
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
