@@ -3,5 +3,5 @@
 # Build the Next site including SSG
 npm run build
 
-# Start the production server
-npm run start
+# Start the production server on port 3033
+npm run start -- -p 3033

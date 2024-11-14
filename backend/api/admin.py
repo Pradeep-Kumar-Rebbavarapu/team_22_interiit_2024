@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     MetaData, Team, MatchInfo, Official, Outcome, Player, Inning, Delivery, Over,
-    Extra, Wicket, Powerplay
+    Extra, Wicket, Powerplay, Chat, Message
 )
 
 class OfficialInline(admin.TabularInline):
@@ -96,3 +96,5 @@ class PowerplayAdmin(admin.ModelAdmin):
     search_fields = ('match_info__date', 'match_info__team_a__name', 'match_info__team_b__name', 'from_over', 'to', 'powerplay_type')
 
 admin.site.register(MetaData)
+admin.site.register(Chat)
+admin.site.register(Message)

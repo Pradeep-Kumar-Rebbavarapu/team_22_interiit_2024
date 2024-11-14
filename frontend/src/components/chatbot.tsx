@@ -12,7 +12,7 @@ import {
   ChevronLeft,
   MessageCircle,
 } from "lucide-react";
-
+import { webSocketConnection } from "@/lib/websockets";
 interface Message {
   id: string;
   text: string;
