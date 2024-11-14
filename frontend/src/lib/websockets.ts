@@ -1,4 +1,4 @@
-const websocketURL = "ws://172.27.80.1:8001/ws/chat/"
+const websocketURL = "ws://172.16.4.2:8001/ws/chat/"
 
 class WebSocketHandler {
   private socket: WebSocket;
