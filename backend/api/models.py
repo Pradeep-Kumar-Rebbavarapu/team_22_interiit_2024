@@ -229,8 +229,8 @@ class Message(models.Model):
 
 class PlayerStatistics(models.Model):
     player_name = models.CharField(max_length=100)
-    batting_hand = models.CharField(max_length=50, null=True, blank=True)
-    bowling_hand = models.CharField(max_length=50, null=True, blank=True)
+    batting = models.CharField(max_length=50, null=True, blank=True)
+    bowling = models.CharField(max_length=50, null=True, blank=True)
     games = models.IntegerField(null=True, blank=True)
     won = models.IntegerField(null=True, blank=True)
     drawn = models.IntegerField(null=True, blank=True)

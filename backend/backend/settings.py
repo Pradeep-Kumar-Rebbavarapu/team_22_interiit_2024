@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_spectacular',
     'corsheaders',
+    'import_export',
 
     # Local
     "api"
