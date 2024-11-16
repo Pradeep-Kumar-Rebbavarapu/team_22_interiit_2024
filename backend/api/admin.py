@@ -18,11 +18,8 @@ class PlayerStatisticsAdmin(ImportExportModelAdmin):
         'wickets', 'balls_bowled', 'economy_rate', 'bowling_avg', 'bowling_sr', 'runs_given_per_ball'
     )
     list_filter = (
-        'player_name', 'batting', 'bowling', 'games', 'won', 'drawn', 'win_percentage', 
-        'innings_batted', 'runs', 'fours', 'sixes', 'balls_faced', 'outs', 'bowled_outs', 'lbw_outs', 
-        'caught_outs', 'stumped_outs', 'run_outs', 'batting_sr', 'batting_avg', 'mean_score', 
-        'scoring_consistency', 'boundary_percentage', 'runs_per_ball', 'innings_bowled', 'runs_given', 
-        'wickets', 'balls_bowled', 'economy_rate', 'bowling_avg', 'bowling_sr', 'runs_given_per_ball'
+        'batting', 'bowling', 'games', 'won', 'drawn',
+        'innings_batted',
     )
 
 class OfficialInline(admin.TabularInline):
