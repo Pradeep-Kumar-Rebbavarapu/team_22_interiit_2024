@@ -1,12 +1,11 @@
-
 import { Trophy } from "lucide-react";
 import MatchCard from "@/components/MatchCard";
 import { getMatches } from "@/api";
 
 export default async function Component() {
-  const matches = await getMatches({limit:20});
+  const matches = await getMatches({ limit: 20 });
   return (
-    <div className=" h-full bg-gradient-to-b from-red-900 to-red-800">
+    <div className=" h-full w-screen overflow-x-hidden bg-gradient-to-b from-red-900 to-red-800">
       {/* Header */}
       <header className="flex items-center justify-between p-4 md:p-6 bg-red-900">
         <div className="flex items-center gap-4">
