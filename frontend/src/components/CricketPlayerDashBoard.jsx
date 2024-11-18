@@ -2,18 +2,13 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
+import { ChartContainer } from "@/components/ui/chart"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts"
 import { CalendarIcon, TrendingUpIcon, Target, Activity, Percent, Award, Shield, Crosshair } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useRouter } from 'next/navigation'
-
-type PlayerStats = {
-  [key: string]: number | string | null
-}
 
 const COLORS = [
   "#FF3B30", // Red
@@ -27,34 +22,25 @@ const COLORS = [
 
 const MATCH_TYPES = ["Test", "MDM", "ODI", "ODM", "T20", "IT20"]
 
-type CricketPlayerDashboardProps = {
-  initialPlayerStats: PlayerStats | null
-  initialError: string | null
-  initialPlayer: string | undefined
-  initialYear: string
-  initialMatchType: string
-}
-
 export default function CricketPlayerDashboard({
   initialPlayerStats,
   initialError,
   initialPlayerId,
   initialYear,
   initialMatchType
-}: CricketPlayerDashboardProps) {
+}) {
   const router = useRouter()
   const currentYear = new Date().getFullYear()
   const [year, setYear] = useState(initialYear)
   const [matchType, setMatchType] = useState(initialMatchType)
-  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(initialPlayerStats)
-  const [error, setError] = useState<string | null>(initialError)
+  const [playerStats, setPlayerStats] = useState(initialPlayerStats)
+  const [error, setError] = useState(initialError)
 
   const years = Array.from({ length: currentYear - 2003 }, (_, i) => (2004 + i).toString())
 
   const fetchPlayerData = () => {
-    router.push(`/PlayerData/${ initialPlayerId}/${year}/${matchType}`)
+    router.push(`/PlayerData/${initialPlayerId}/${year}/${matchType}`)
   }
-
 
   const isBatsman = Number(playerStats["Innings Batted"]) > 0
   const isBowler = Number(playerStats["Innings Bowled"]) > 0
@@ -121,7 +107,7 @@ export default function CricketPlayerDashboard({
     ] : []),
   ]
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
@@ -185,7 +171,7 @@ export default function CricketPlayerDashboard({
             </Card>
           ))}
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {isBatsman && (
             <Card className="border-2 border-blue-200">
@@ -207,7 +193,7 @@ export default function CricketPlayerDashboard({
               </CardContent>
             </Card>
           )}
-          
+
           {isBowler && (
             <Card className="border-2 border-green-200">
               <CardHeader>
@@ -229,7 +215,7 @@ export default function CricketPlayerDashboard({
             </Card>
           )}
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {isBatsman && (
             <Card className="border-2 border-red-200">
@@ -261,7 +247,7 @@ export default function CricketPlayerDashboard({
               </CardContent>
             </Card>
           )}
-          
+
           {isBowler && (
             <Card className="border-2 border-purple-200">
               <CardHeader>
@@ -293,7 +279,7 @@ export default function CricketPlayerDashboard({
             </Card>
           )}
         </div>
-        
+
         <Card className="mb-8 border-2 border-orange-200">
           <CardHeader>
             <CardTitle className="text-xl font-semibold text-orange-600">Performance Radar</CardTitle>
@@ -311,7 +297,7 @@ export default function CricketPlayerDashboard({
             </ChartContainer>
           </CardContent>
         </Card>
-        
+
         <Card className="border-2 border-pink-200">
           <CardHeader>
             <CardTitle className="text-xl font-semibold text-pink-600">All Statistics</CardTitle>
