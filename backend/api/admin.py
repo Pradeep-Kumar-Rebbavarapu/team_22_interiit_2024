@@ -1,8 +1,26 @@
 from django.contrib import admin
 from .models import (
-    MetaData, Team, MatchInfo, Official, Outcome, Player, Inning, Delivery, Over,
+    MetaData, Team, MatchInfo, Official, Outcome, Player, Inning, Delivery, Over, PlayerStatistics,
     Extra, Wicket, Powerplay, Chat, Message
 )
+from import_export.admin import ImportExportModelAdmin
+from .resources import PlayerStatisticsResource
+
+@admin.register(PlayerStatistics)
+class PlayerStatisticsAdmin(ImportExportModelAdmin):
+    resource_class = PlayerStatisticsResource
+
+    list_display = (
+        'player_name', 'batting', 'bowling', 'games', 'won', 'drawn', 'win_percentage', 
+        'innings_batted', 'runs', 'fours', 'sixes', 'balls_faced', 'outs', 'bowled_outs', 'lbw_outs', 
+        'caught_outs', 'stumped_outs', 'run_outs', 'batting_sr', 'batting_avg', 'mean_score', 
+        'scoring_consistency', 'boundary_percentage', 'runs_per_ball', 'innings_bowled', 'runs_given', 
+        'wickets', 'balls_bowled', 'economy_rate', 'bowling_avg', 'bowling_sr', 'runs_given_per_ball'
+    )
+    list_filter = (
+        'batting', 'bowling', 'games', 'won', 'drawn',
+        'innings_batted',
+    )
 
 class OfficialInline(admin.TabularInline):
     model = Official
