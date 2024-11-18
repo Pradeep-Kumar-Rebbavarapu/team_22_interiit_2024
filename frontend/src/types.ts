@@ -76,6 +76,6 @@ export interface MatchFC {
   meta: number | object;
   innings?: Inning[];
   powerplays?: Powerplay[];
-  team_a_players?: Player[];
-  team_b_players?: Player[];
+  team_a_players?: Player[] | undefined;
+  team_b_players?: Player[] | undefined;
 }

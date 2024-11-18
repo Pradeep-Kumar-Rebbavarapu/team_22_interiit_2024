@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/page.jsx", "src/app/EachMatch/[id]/SelectTeam/page.jsx", "src/app/PlayerData/[id]/[year]/[match_type]/page.jsx", "src/components/CricketPlayerDashBoard.jsx", "src/components/chatbot.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/page.jsx", "src/app/EachMatch/[id]/SelectTeam/page.jsx", "src/app/PlayerData/[id]/[year]/[match_type]/page.jsx", "src/components/CricketPlayerDashBoard.jsx", "src/components/chatbot.jsx", "src/components/MatchDetailClient.jsx"],
   "exclude": ["node_modules"]
 }

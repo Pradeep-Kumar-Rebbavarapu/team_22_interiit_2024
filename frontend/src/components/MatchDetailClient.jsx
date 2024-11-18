@@ -14,13 +14,6 @@ function PlayerCard({
   isPredicted = false,
   current_year,
   match_type,
-}: {
-  player: Player;
-  isSelected: boolean;
-  onToggle: () => void;
-  isPredicted?: boolean;
-  current_year: number;
-  match_type?: string;
 }) {
   return (
     <div
@@ -80,7 +73,7 @@ function PlayerCard({
 }
 
 // Simulated API call
-const predictPlayers = async (players: Player[]): Promise<Player[]> => {
+const predictPlayers = async (players) => {
   await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate 2 second delay
   return players.slice(0, 11); // Return first 11 players as predicted
 };
@@ -89,17 +82,13 @@ export default function Component({
   matchData,
   id,
   current_year
-}: {
-  matchData: MatchFC;
-  id: number;
-  current_year: number;
 }) {
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [activeTab, setActiveTab] = useState<
     "batters" | "bowlers" | "allRounders" | "wicketKeepers"
   >("batters");
   const [showPredictedPlayers, setShowPredictedPlayers] = useState(false);
-  const [predictedPlayers, setPredictedPlayers] = useState<Player[]>([]);
+  const [predictedPlayers, setPredictedPlayers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPredictedSectionOpen, setIsPredictedSectionOpen] = useState(true);
 
@@ -107,7 +96,7 @@ export default function Component({
   const playersTeamB = matchData.team_b_players;
   const players = [...playersTeamA, ...playersTeamB];
 
-  const togglePlayer = (playerId: string) => {
+  const togglePlayer = (playerId) => {
     setSelectedPlayers((prev) =>
       prev.includes(playerId)
         ? prev.filter((id) => id !== playerId)
@@ -317,7 +306,7 @@ export default function Component({
               className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm ${
                 activeTab === tab ? "bg-green-500 text-white" : "bg-gray-200"
               }`}
-              onClick={() => setActiveTab(tab as typeof activeTab)}
+              onClick={() => setActiveTab(tab)}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
