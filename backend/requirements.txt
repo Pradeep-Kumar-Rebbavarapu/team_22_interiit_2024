@@ -54,9 +54,6 @@ google-generativeai==0.8.3
 googleapis-common-protos==1.66.0
 greenlet==3.1.1
 groq==0.12.0
-grpc-interceptor==0.15.4
-# grpcio==1.64.0
-grpcio-status==1.67.1
 gTTS==2.5.4
 gunicorn==23.0.0
 h11==0.14.0
