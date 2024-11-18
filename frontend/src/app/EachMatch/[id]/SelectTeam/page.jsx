@@ -9,7 +9,7 @@ export default async function MatchDetailPage({ params }) {
   return (
     <>
       <MatchDetailClient matchData={matchData[0]} id={params.id} />
-      <Dream11AIChat />
+      <Dream11AIChat match_id = {matchData[0].id}/>
     </>
   );
 }

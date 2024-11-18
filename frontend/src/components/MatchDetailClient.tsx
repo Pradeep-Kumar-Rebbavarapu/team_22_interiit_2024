@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ArrowLeft,
-  Info,
-  Minus,
-  ChevronRight,
-  Trophy,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, Info, Minus, ChevronRight, Trophy, ChevronDown, ChevronUp, Loader2, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { MatchFC, Player } from "@/types";
@@ -21,18 +12,21 @@ function PlayerCard({
   isSelected,
   onToggle,
   isPredicted = false,
+  current_year,
+  match_type,
 }: {
   player: Player;
   isSelected: boolean;
   onToggle: () => void;
   isPredicted?: boolean;
+  current_year: number;
+  match_type?: string;
 }) {
   return (
     <div
-      className={`flex items-center p-3 sm:p-4 border-b cursor-pointer transition-colors ${
+      className={`flex items-center p-3 sm:p-4 border-b transition-colors ${
         isSelected ? "bg-green-100" : ""
       } ${isPredicted ? "border-l-4 border-l-yellow-500" : ""}`}
-      onClick={onToggle}
     >
       <Info className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 mr-2 sm:mr-3 flex-shrink-0" />
       <div className="flex flex-1 items-center">
@@ -52,6 +46,13 @@ function PlayerCard({
               Played last match
             </span>
           </div>
+          <Link
+            href={`/PlayerData/${player.identifier}/${current_year}/${match_type?.toUpperCase() || 'ALL'}`}
+            className="text-blue-600 hover:underline text-sm mt-1 flex items-center"
+          >
+            <User className="w-4 h-4 mr-1" />
+            View Profile
+          </Link>
         </div>
         <div className="flex items-center gap-2 sm:gap-8 ml-2 sm:ml-4">
           <span className="text-lg sm:text-2xl font-semibold">
@@ -61,6 +62,10 @@ function PlayerCard({
             variant="ghost"
             size="icon"
             className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
           >
             {isSelected ? (
               <Minus className="w-4 h-4 sm:w-6 sm:h-6" />
@@ -83,9 +88,11 @@ const predictPlayers = async (players: Player[]): Promise<Player[]> => {
 export default function Component({
   matchData,
   id,
+  current_year
 }: {
   matchData: MatchFC;
   id: number;
+  current_year: number;
 }) {
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<
@@ -96,8 +103,8 @@ export default function Component({
   const [isLoading, setIsLoading] = useState(false);
   const [isPredictedSectionOpen, setIsPredictedSectionOpen] = useState(true);
 
-  const playersTeamA = matchData.team_a.players;
-  const playersTeamB = matchData.team_b.players;
+  const playersTeamA = matchData.team_a_players;
+  const playersTeamB = matchData.team_b_players;
   const players = [...playersTeamA, ...playersTeamB];
 
   const togglePlayer = (playerId: string) => {
@@ -286,6 +293,8 @@ export default function Component({
                     isSelected={selectedPlayers.includes(player.identifier)}
                     onToggle={() => togglePlayer(player.identifier)}
                     isPredicted={true}
+                    current_year={2024}
+                    match_type={matchData.match_type}
                   />
                 ))}
                 <div className="p-3 sm:p-4 bg-gray-50">
@@ -321,6 +330,8 @@ export default function Component({
             player={player}
             isSelected={selectedPlayers.includes(player.identifier)}
             onToggle={() => togglePlayer(player.identifier)}
+            current_year={2024}
+            match_type={matchData.match_type}
           />
         ))}
       </div>

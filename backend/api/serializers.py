@@ -16,7 +16,7 @@ class MetaDataSerializer(serializers.ModelSerializer):
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
-        fields = "__all__"
+        fields = ["id","identifier","name","role"]
 
 # Team serializer
 class TeamSerializer(serializers.ModelSerializer):
@@ -81,13 +81,8 @@ class PowerPlaySerializer(serializers.ModelSerializer):
 class MatchSerializer(serializers.ModelSerializer):
     team_a = TeamSerializer()
     team_b = TeamSerializer()
-    meta = MetaDataSerializer()
-    officials = OfficialSerializer(many=True)
-    outcome = OutcomeSerializer()
-    powerplays = PowerPlaySerializer(many=True)
-    innings = InningsSerializer(many=True)
-    
-
+    team_a_players = PlayerSerializer(many=True)
+    team_b_players = PlayerSerializer(many=True)
     class Meta:
         model = MatchInfo
         fields = "__all__"

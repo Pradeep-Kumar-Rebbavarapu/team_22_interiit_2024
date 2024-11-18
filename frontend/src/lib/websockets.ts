@@ -1,6 +1,6 @@
 
-// const websocketURL = "ws://127.0.0.1:8000/ws/chat/"
-const websocketURL = "ws://172.16.4.2:8001/ws/chat/"
+const websocketURL = "ws://127.0.0.1:8000/ws/chat/"
+// const websocketURL = "ws://172.16.4.2:8001/ws/chat/"
 
 class WebSocketHandler {
   private socket: WebSocket;
@@ -38,9 +38,9 @@ class WebSocketHandler {
     console.log("WebSocket connection closed:", event);
   }
 
-  public sendMessage(message: string) {
+  public sendMessage(message: string,match_id:any) {
     if (this.socket.readyState === WebSocket.OPEN) {
-      const msg = { message: message };
+      const msg = { message: message ,match_id : match_id};
       const sendMsg = JSON.stringify(msg);
       this.socket.send(sendMsg);
     } else {
