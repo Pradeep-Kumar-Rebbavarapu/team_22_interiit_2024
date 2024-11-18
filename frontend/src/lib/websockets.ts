@@ -38,7 +38,7 @@ class WebSocketHandler {
     console.log("WebSocket connection closed:", event);
   }
 
-  public sendMessage(message: string,match_id:any) {
+  public sendMessage(message: string,match_id:number) {
     if (this.socket.readyState === WebSocket.OPEN) {
       const msg = { message: message ,match_id : match_id};
       const sendMsg = JSON.stringify(msg);

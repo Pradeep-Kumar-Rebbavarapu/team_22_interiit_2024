@@ -16,11 +16,6 @@ import { webSocketConnection } from "@/lib/websockets"
 import { TypeAnimation } from 'react-type-animation';
 
 
-interface Message {
-  id: string
-  text: string
-  isUser: boolean
-}
 
 const TypingIndicator = () => {
   const [dots, setDots] = useState('.')
@@ -49,16 +44,16 @@ const TypingIndicator = () => {
   )
 }
 
-export default function Dream11AIChat({match_id}:any) {
+export default function Dream11AIChat({match_id}) {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
-  const [chatHistory, setChatHistory] = useState<Message[]>([])
+  const [chatHistory, setChatHistory] = useState([])
   const [isTyping, setIsTyping] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef(null)
 
-  const addMessage = (message: string) => {
+  const addMessage = (message) => {
     setIsTyping(false)
-    const aiMessage: Message = {
+    const aiMessage = {
       id: Date.now().toString(),
       text: message,
       isUser: false,
@@ -73,7 +68,7 @@ export default function Dream11AIChat({match_id}:any) {
   const handleSend = () => {
     if (input.trim()) {
       const text = input.trim()
-      const userMessage: Message = {
+      const userMessage = {
         id: Date.now().toString(),
         text,
         isUser: true,
