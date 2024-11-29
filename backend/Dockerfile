@@ -18,4 +18,4 @@ RUN python manage.py collectstatic --noinput
 EXPOSE 8088 8001
 
 # Define the command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.wsgi:application", "--timeout", "15", "--preload", "--workers", "$(python -c 'import multiprocessing as mp; print(2 * mp.cpu_count() + 1)')"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.wsgi:application", "--timeout", "15", "--preload", "--workers", "14"]
