@@ -78,15 +78,12 @@ const predictPlayers = async (players) => {
   return players.slice(0, 11); // Return first 11 players as predicted
 };
 
-export default function Component({
+export default function MatchDetailClient({
   matchData,
-  id,
   current_year
 }) {
   const [selectedPlayers, setSelectedPlayers] = useState([]);
-  const [activeTab, setActiveTab] = useState<
-    "batters" | "bowlers" | "allRounders" | "wicketKeepers"
-  >("batters");
+  const [activeTab, setActiveTab] = useState("batters");
   const [showPredictedPlayers, setShowPredictedPlayers] = useState(false);
   const [predictedPlayers, setPredictedPlayers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -325,21 +322,7 @@ export default function Component({
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-3 sm:p-4">
-        <div className="flex justify-between max-w-3xl mx-auto">
-          <Link
-            href={`/EachMatch/${id}/PREVIEW`}
-            className="w-full h-full mr-2"
-          >
-            <Button
-              variant="outline"
-              className="w-full h-full bg-gray-100 text-xs sm:text-sm"
-            >
-              PREVIEW
-            </Button>
-          </Link>
-        </div>
-      </div>
+      
     </div>
   );
 }
