@@ -99,14 +99,6 @@ class MessageSerializer(serializers.ModelSerializer):
         return obj.created_at.strftime("%d-%m-%Y %H:%M:%S")
 
 class ChatSerializer(serializers.ModelSerializer):
-    last_message = serializers.SerializerMethodField()
-    messages = MessageSerializer(many=True, read_only=True)
-
     class Meta:
         model = Chat
-        fields = ["pk", "name", "messages", "last_message"]
-        depth = 1
-        read_only_fields = ["messages", "last_message"]
-
-    def get_last_message(self, obj:Chat):
-        return MessageSerializer(obj.messages.order_by('created_at').last()).data
+        fields = "__all__"

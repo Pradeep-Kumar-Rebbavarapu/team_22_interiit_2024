@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 # Meta information model
 class MetaData(models.Model):
@@ -60,7 +61,11 @@ class MatchInfo(models.Model):
     target_runs = models.IntegerField(null=True, blank=True)
     target_overs = models.IntegerField(null=True, blank=True)
     meta = models.OneToOneField(MetaData, on_delete=models.CASCADE)
-
+    prize_pool = models.CharField(null=True, blank=True, max_length=225,default=None)
+    first_prize = models.CharField(null=True, blank=True, max_length=225,default=None)
+    amount_to_be_paid = models.IntegerField(null=True, blank=True, default=None)
+    teama_spots_left = models.IntegerField(null=True, blank=True, default=None)
+    teamb_spots_left = models.IntegerField(null=True, blank=True, default=None)
     def __str__(self):
         return f"Match {self.match_type} on {self.date}"
 
@@ -212,11 +217,18 @@ class Powerplay(models.Model):
 
 
 class Chat(models.Model):
-    match = models.ForeignKey(MatchInfo, on_delete=models.CASCADE, related_name="chats")
+    match = models.ForeignKey('MatchInfo', on_delete=models.CASCADE, related_name="chats")
+    message = models.TextField()
+    is_ai = models.BooleanField(default=False)  
+    is_user = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"Chat of {self.name}"
+        message_origin = "User" if self.is_user else "AI"
+        return f"{message_origin} message for match {self.match_id} at {self.timestamp}"
 
+    class Meta:
+        ordering = ['timestamp']
 
 class Message(models.Model):
     chat = models.ForeignKey("Chat",  on_delete=models.CASCADE, related_name="messages")

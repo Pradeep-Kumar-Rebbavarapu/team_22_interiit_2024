@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -13,9 +13,8 @@ import {
   MessageCircle,
 } from "lucide-react"
 import { webSocketConnection } from "@/lib/websockets"
-import { TypeAnimation } from 'react-type-animation';
-
-
+import { TypeAnimation } from 'react-type-animation'
+import { getMatchRelatedChats } from "@/api"
 
 const TypingIndicator = () => {
   const [dots, setDots] = useState('.')
@@ -44,7 +43,7 @@ const TypingIndicator = () => {
   )
 }
 
-export default function Dream11AIChat({match_id}) {
+export default function Dream11AIChat({ match_id }) {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
   const [chatHistory, setChatHistory] = useState([])
@@ -73,9 +72,9 @@ export default function Dream11AIChat({match_id}) {
         text,
         isUser: true,
       }
-      setChatHistory([...chatHistory, userMessage])
+      setChatHistory((prev) => [...prev, userMessage])
       setIsTyping(true)
-      webSocketConnection.sendMessage(userMessage.text,match_id)
+      webSocketConnection.sendMessage(userMessage.text, match_id)
       setInput("")
     }
   }
@@ -83,6 +82,25 @@ export default function Dream11AIChat({match_id}) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatHistory, isTyping])
+
+  useEffect(() => {
+    const fetchMatchChats = async () => {
+      try {
+        const matchChats = await getMatchRelatedChats({ match_id: match_id })
+        setChatHistory(matchChats.map((chat) => ({
+          id: chat.id,
+          text: chat.message,
+          isUser: chat.is_user,
+        })))
+      } catch (error) {
+        console.error("Error fetching match chats:", error)
+      }
+    }
+
+    if (isOpen) {
+      fetchMatchChats()
+    }
+  }, [match_id, isOpen])
 
   if (!isOpen) {
     return (
@@ -131,18 +149,7 @@ export default function Dream11AIChat({match_id}) {
                   }`}
               >
                 <div className="text-sm">
-                  {message.isUser === false ? (
-                    <TypeAnimation
-                      sequence={[message?.text]}
-                      wrapper="span"
-                      speed={1}
-                    />
-                  ) : (
-                    <div>
-                      {message.text}
-                    </div>
-                  )}
-
+                  {message.text}
                 </div>
               </div>
               {message.isUser && (
@@ -193,3 +200,4 @@ export default function Dream11AIChat({match_id}) {
     </div>
   )
 }
+

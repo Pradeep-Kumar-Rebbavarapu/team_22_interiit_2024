@@ -32,8 +32,14 @@ class MatchList(generics.ListCreateAPIView):
 
 
 class ChatList(generics.ListCreateAPIView):
-    queryset = Chat.objects.all()
     serializer_class = ChatSerializer
+
+    def get_queryset(self):
+        match_id = self.request.query_params.get('match_id', None)
+        if match_id is not None:
+            return Chat.objects.filter(match_id=match_id).order_by('timestamp')
+        return Chat.objects.none()
+
 
 
 class ChatDetail(generics.RetrieveAPIView):
@@ -224,5 +230,3 @@ class GetPlayerReport(APIView):
                 'error': f'An unexpected error occurred: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-
-

@@ -6,7 +6,7 @@ export default async function Page({ params }) {
   const playerStats = await getPlayerData({ player_identifier: params.player_id, year:params.year, match_type:params.match_type })
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto ">
       <CricketPlayerDashboard
         initialPlayerStats={playerStats?.data?.statistics[0] || null}
         initialYear={params.year || ""}
