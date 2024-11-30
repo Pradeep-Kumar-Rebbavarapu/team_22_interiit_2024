@@ -463,7 +463,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         action = parsed_response["Action"]
         action_input = parsed_response["Action Input"]
         response_format = parsed_response["Response Format"]
-        
+        result = ""
         # Process based on action type
         if action == "Calculator":
             result = calculator(action_input, response_format)
@@ -474,7 +474,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
             print("QuickDB Called")
             result = quickDB(message, response_format, message)
         elif action == 'DirectResponse':
-            print(gemini(DIRECT_PROMPT + response_format + "\nand this is what the user initially asked: \n"+ message))
+            result = gemini(DIRECT_PROMPT + response_format + "\nand this is what the user initially asked: \n"+ message)
         else:
             return "I don't understand the question. Please try rephrasing it."
         
