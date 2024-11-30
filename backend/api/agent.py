@@ -1,71 +1,71 @@
-import fal_client
+
 import os
-from termcolor import colored
 import json
 from py_expression_eval import Parser
-import sqlite3
 from fuzzywuzzy import process
-
+from backend.settings import BASE_DIR
+import sys
 # If you installed cricketstats by pip import the module with line below
 import cricketstats as cks
 from groq import Groq
 
-client = Groq(api_key="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")
+client = Groq(api_key="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")
 
 # If you cloned the github repo uncomment the block below.
 
-# all_players = ['V Kohli', 'HH Pandya']
+player_data = open(os.path.join(BASE_DIR,'./data/player_data.json'), 'r')
+past_data = player_data.read()
 
-import os
-import sys
+past_data = json.loads(past_data)
+
+
+
 module_path = os.path.abspath(os.path.join("./cricketstats/src/"))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
 parser = Parser()
 
-def searchDB2(input_query: str):
-    """
-    Execute a database search using the provided input query.
-    """
-    try:
-        with sqlite3.connect('db.sqlite3') as conn:
-            cursor = conn.cursor()
-            
-            handler = fal_client.submit(
-                "fal-ai/any-llm",
-                arguments={
-                    "prompt": PROMPT[index] + input_query,      
-                    "model": "openai/gpt-4o-mini"
-                },
-            )
-            request_id = handler.request_id
-            
-            status = fal_client.status("fal-ai/any-llm", request_id, with_logs=True)
-            result = fal_client.result("fal-ai/any-llm", request_id)
-            
-            # Extract and clean the SQL query
-            sql_query = str(result['output']).strip()
-
-            # Remove any extra quotes around the query
-            sql_query = sql_query.strip('"\'')
-            
-            print(f"Executing query: {sql_query}")
-            
-            # Execute query
-            cursor.execute(sql_query)
-            data = cursor.fetchall()
-            
-            return data
-                
-    except Exception as e:
-        print(f"Error occurred: {str(e)}")
-        return None
-
-def agentAI(message: str, all_players: list) -> str:
-    """Main function to process queries and return responses"""
-    
+def agentAI(message: str, all_players_id: list, all_players: list, all_players_variations: list) -> str:
+    """Main function to process queries and return return response"""
+  
     # PROMPTS
+    QUICK_PROMPT = f'''Create me an exact JSON query as a string for the prompt given at the end. Follow these rules strictly:
+
+    1. ONLY use the fields explicitly listed below
+    2. Do NOT reference any fields that are not listed here
+    3. Return ONLY the raw JSON string with NO markdown formatting, NO code blocks, NO backticks, and NO additional text
+    4. Do NOT include json, , or any other markdown/code formatting
+    5. Ensure all crucial data matches those provided
+
+    Arguments which must be in the final output JSON (Or empty array):
+        - players = ""    # One or two players specified by user. FORMAT: ["Player whose performance is being checked", "Against whom is it being checked"]. For example (DO NOT USE THE NAMES PROVIDED IN THE EXAMPLES). - If V Kohli plays against HH Pandya, write ['V Kohli', 'HH Pandya']. Options to choose from = ''' + str(all_players) + '''. If the players user mentioned do not lie in the Options, then use the first player name.
+        - matchtype = Options = ['club_ODI_previous3_runs', 'club_ODI_previous3_wickets', 'club_ODI_previous3_balls played', 'club_ODI_previous3_overs', 'club_ODI_previous3_runs gave', 'club_ODI_lifetime_runs', 'club_ODI_lifetime_wickets', 'club_ODI_lifetime_balls played', 'club_ODI_lifetime_overs', 'club_ODI_lifetime_runs gave', 'club_Test_previous3_runs', 'club_Test_previous3_wickets', 'club_Test_previous3_balls played', 'club_Test_previous3_overs', 'club_Test_previous3_runs gave', 'club_Test_lifetime_runs', 'club_Test_lifetime_wickets', 'club_Test_lifetime_balls played', 'club_Test_lifetime_overs', 'club_Test_lifetime_runs gave', 'club_T20_previous3_runs', 'club_T20_previous3_wickets', 'club_T20_previous3_balls played', 'club_T20_previous3_overs', 'club_T20_previous3_runs gave', 'club_T20_lifetime_runs', 'club_T20_lifetime_wickets', 'club_T20_lifetime_balls played', 'club_T20_lifetime_overs', 'club_T20_lifetime_runs gave', 'international_ODI_previous3_runs', 'international_ODI_previous3_wickets', 'international_ODI_previous3_balls played', 'international_ODI_previous3_overs', 'international_ODI_previous3_runs gave', 'international_ODI_lifetime_runs', 'international_ODI_lifetime_wickets', 'international_ODI_lifetime_balls played', 'international_ODI_lifetime_overs', 'international_ODI_lifetime_runs gave', 'international_Test_previous3_runs', 'international_Test_previous3_wickets', 'international_Test_previous3_balls played', 'international_Test_previous3_overs', 'international_Test_previous3_runs gave', 'international_Test_lifetime_runs', 'international_Test_lifetime_wickets', 'international_Test_lifetime_balls played', 'international_Test_lifetime_overs', 'international_Test_lifetime_runs gave', 'international_T20_previous3_runs', 'international_T20_previous3_wickets', 'international_T20_previous3_balls played', 'international_T20_previous3_overs', 'international_T20_previous3_runs gave', 'international_T20_lifetime_runs', 'international_T20_lifetime_wickets', 'international_T20_lifetime_balls played', 'international_T20_lifetime_overs', 'international_T20_lifetime_runs gave']
+        - columns = []    # An array containing the data the user wants, Options: ['runs', 'wickets', 'balls']
+        Example: If the user says, "Runs of someone" then columns should be ["runs"]. If the user says, "wickets by someone", columns should be ["wickets"]. If the user says, "wickets and balls", columns should be ["wickets","balls"]. Default = ["runs", "wickets", "balls"]
+
+    Note that if two players are mentioned, matchtype is empty. Only columns should be present. If only one player exists, then column is empty. If both are explicitly mentioned, prefer matchtype over columns.
+    If there is only a single player and no matchtype is mentioned - Default: ['international_ODI_lifetime_runs', 'international_Test_lifetime_runs', 'international_T20_lifetime_runs', 'international_ODI_lifetime_wickets', 'international_Test_lifetime_wickets', 'international_T20_lifetime_wickets']    
+    If user only told 'runs' without mentioning matchtype, then Default: ['international_ODI_lifetime_runs', 'international_Test_lifetime_runs', 'international_T20_lifetime_runs', 'club_ODI_lifetime_runs', 'club_Test_lifetime_runs', 'club_T20_lifetime_runs']
+    If user only told 'wickets' without mentioning matchtype, then Default: ['international_ODI_lifetime_wickets', 'international_Test_lifetime_wickets', 'international_T20_lifetime_wickets', 'club_ODI_lifetime_wickets', 'club_Test_lifetime_wickets', 'club_T20_lifetime_wickets']
+
+    Return a JSON containing all the required arguments and optional arguments as specified by the user:
+
+    Output JSON Examples:
+    {
+        "players": ["Sarfaraz Ahmed", "KK Ram"],
+        "matchtype": [],
+        "columns": ["runs", "wickets"]
+    }
+
+    {
+        "players": ["Sam Altman"],
+        "matchtype": ["Test", "IT20"],
+        "columns": []
+    }
+
+    Begin!
+    '''
 
     DB_PROMPT = f'''Create me an exact JSON query as a string for the prompt given at the end. Follow these rules strictly:
 
@@ -77,7 +77,7 @@ def agentAI(message: str, all_players: list) -> str:
 
     Required Arguments which must be in the final output JSON:
         - players = ""    # Array of players specified by user. Pick only players inside this array and not from outside or the examples. For example (DO NOT USE THE NAMES PROVIDED IN THE EXAMPLES). - ["SS Kappa"] or ["ST Byako", "QW Marchem"]. Options to choose from = ''' + str(all_players) + '''. If the players user mentioned do not lie in the Options, then use the first player name.
-        - to_date = ()    # Array of date in YYYY,MM,DD format. Default - [2024,6,30]. If value less than 10, do not add leading zeroes. If user's date is greater, choose [2024,6,30]. If user only enters a year say 2021, then set date as 2021,12,31
+        - to_date = ()    # Array of date in YYYY,MM,DD format. Default - [2024,11,10]. If value less than 10, do not add leading zeroes. If user's date is greater, choose [2024,6,30]. If user only enters a year say 2021, then set date as 2021,12,31
         - from_date = ()    # Array of date in YYYY,MM,DD format. Default - [2019,6,30]. If value less than 10, do not add leading zeroes. If user's date is smaller, choose [2019, 6, 30]. If user only enters a year say 2021, then set date as 2021,1,1.
         - matchtype = []    # An array containing the match type(s) specified by the user, Options: ["Test", "MDM", "ODI", "ODM", "T20", "IT20"] ("Test matches", "Multi-day matches", "One-day internationals", "One-day matches", "T20 internationals", "Non-official T20 internationals" respectively). Default - ["Test", "MDM", "ODI", "ODM", "T20", "IT20"]. 
         - columns = []    # An array containing the data the user wants, Options: ['Runs', 'Wickets', 'Avg Consecutive Dot Balls', 'Avg First Boundary Ball', 'Balls Bowled', 'Balls Faced', 'Balls Faced MeanAD', 'Batting', 'Batting Avg', 'Batting S/R', 'Batting S/R MeanAD', 'Boundary %', 'Boundary Given %', 'Boundary Given Rate', 'Boundary Rate', 'Bowled Outs', 'Bowleds','Bowling', 'Bowling Avg', 'Bowling Avg MeanAD', 'Bowling S/R', 'Bowling S/R MeanAD', 'Catches', 'Caught Outs', 'Caught and Bowled Outs', 'Caught and Bowleds', 'Caughts', 'Dismissal Rate', 'Dot Ball %', 'Dot Ball Bowled %', 'Dot Balls', 'Dot Balls Bowled', 'Drawn', 'Economy Rate', 'Economy Rate MeanAD', 'Extras', 'Fours', 'Foursgiven', 'Games', 'Hitwicket Outs', 'Hitwickets', 'Innings Batted', 'Innings Bowled', 'LBW Outs', 'LBWs', 'Mean Balls Faced', 'Mean Score', 'No Balls', 'Outs', 'Players', 'Run Outs', 'Runouts', 'Runs', 'Runs/Ball', 'Runsgiven', 'Runsgiven/Ball', 'Score MeanAD', 'Scoring Consistency', 'Singles', 'Singlesgiven', 'Sixes', 'Sixesgiven', 'Strike Turnover %', 'Strike Turnovergiven %', 'Stumped Outs', 'Stumpeds', 'Stumpings', 'Survival Consistency', 'Wickets', 'Wides', 'Win %', 'Won', 'Runs Rate', 'Runsgiven/Wicket', 'Runs AA', 'Runs/Ball AA', 'Runsgiven AA', 'Runsgiven/Ball AA', Default = All
@@ -143,14 +143,17 @@ def agentAI(message: str, all_players: list) -> str:
     # Begin!
     # '''
     AGENT_PROMPT = '''
-    You are a knowledgeable assistant that can handle various types of queries. Analyze the user's query and determine the best way to respond. Follow these steps:
+    You are a knowledgeable assistant that can handle various types of queries. Keep your context only to CRICKET. You have access to data from June 2019 to November 2024. Analyze the user's query and determine the best way to respond. Follow these steps:
 
     1. ONLY use format of JSON = { "Thought": "(thought)", "Action": "(action)", "Response Format": "(response_format)" }
     2. Do NOT reference any other format not listed here
-    4. Do NOT include json, , or *** any other markdown/code formatting
-
+    3. Do NOT include json, , or *** any other markdown/code formatting
+    4. If the player is not present in the following list of players = ''' + str(all_players_variations) + ''', say "(Player Name) is not playing today." 
+        Example: User says 'How is Tim Cook as a player?', Say 'Tim Cook is not playing today.'
+    
     1. First determine what type of information is needed:
-    - Database Query (SearchDB): For factual information stored in the database
+    - Database Query (SearchDB): For all factual information stored in the database for all other complex queries. Use when two or more players are involved or anything apart from wickets, runs, overs or balls is asked. Example = 1. Runs with win percentage and strike rate of Hardik, 2. How is Kohli against leg spinners?
+    - Database Query (QuickDB): For extremely fast information of player Head to Head against scenarios. Contains runs, overs and balls data of previous 3 matches (international or club) and lifetime matches only for each match format. Also contains head to head data. Examples: 1. runs of Sam against Ethen, 2. total runs or wickets in test cricket of last 3 matches of Aman.
     - Calculation (Calculator): For mathematical operations
     - Direct Response: For general knowledge or logical reasoning
 
@@ -161,7 +164,9 @@ def agentAI(message: str, all_players: list) -> str:
         "Thought": "Your analysis of what needs to be done",
         "Action": "SearchDB or Calculator or DirectResponse",
         "Action Input": "Your query or calculation or None for direct responses",
-        "Response Format" : "Your Response"
+        "Response Format" : "Your Response",
+        "Players": "Array of all players mentioned by the user, Format: ['Plauyer1', 'Player2']"
+    }
 
     Begin!
     '''
@@ -177,9 +182,17 @@ def agentAI(message: str, all_players: list) -> str:
     -------- END OF TABLES
     Below is the user prompt'''
 
+    DIRECT_PROMPT = '''You are a knowledgeable assistant for the user. DO NOT INCLUDE ANY EXPLICIT OR UNWANTED CONTENT.
+                        Respond to the user query directly with your knowledge in 1-2 lines. Be short and concise.
+                        Following is a summarised version of the format in which you have to respond to the user:
+
+                    '''
+
 
 
     def match_players(player_names) -> list:
+
+        print("Matching...")
         # If the LLM instead generates a string of a single player instead of an array.
         if type(player_names) == type("String"):
             dummyPlayers = []
@@ -188,14 +201,32 @@ def agentAI(message: str, all_players: list) -> str:
 
         players = []
 
+        variations = [variation for variations_list in all_players_variations.values() for variation in variations_list]
+        print("Alag: ", variations)
         # Match the best player playing in the match.
         for player_name in player_names:
-            best_match = process.extractOne(player_name, all_players)
+            print(player_name)
+            best_match = process.extractOne(player_name, variations)
+            print(best_match)
 
             if best_match and best_match[1] >= 70:
-                players.append(best_match[0])
+                for key in all_players_variations.keys():
+                    print(key)
+                    if best_match[0] in all_players_variations[key]:
+                        players.append(key)
+                        break
+        
+        print("Khiladi: ", players)
 
         return players
+
+    def match_ids(player_names) -> list:
+        ids = []
+
+        for player in player_names:
+            ids.append(all_players_id[all_players.index(player)])
+
+        return ids
 
     def calculator(input_query: str, response_format: str) -> float:
         """
@@ -206,14 +237,59 @@ def agentAI(message: str, all_players: list) -> str:
         except Exception as e:
             raise ValueError(f"Error in calculation: {str(e)}")
         
+    def fetchDataStats(input_query, message: str) -> str:
+        print("DataStats Called")
+        print(type(input_query))
+        players_name = input_query.get('players', [])
+        columns = input_query.get('columns', [])
+        matchtype = input_query.get('matchtype', [])
+
+        print(players_name, columns, matchtype)
+        # Matching every player name to our players list.
+        players_name = match_players(players_name)
+
+        data = []
+
+        players = match_ids(players_name)
+        print(players)
+
+        if len(players) == 1:
+            for match in matchtype:
+                data.append([match, past_data[players[0]][match]])
+        if len(players) == 2:
+            for column in columns:
+                data.append([column, past_data[players[0]]["played_against"][players[1]][column]])
+
+        data = gemini(f"""
+                      You are a helpful humanoid agent. Answer the user like a normal human without mentioning your name.
+                      Be very precise and to the point, do not extend. Talk in 1-2 lines.
+                      Example: 'The wickets taken by Pandya in his last match was 4.'. 
+                      TALK LIKE A HUMAN. IF THE DATA IS NOT PRESENT OR SILLY, ANSWER THE QUERY USING YOUR OWN DATA. 
+                      Fill the query as per the response format for the user's query is given at the bottom.
+                      
+                      Adhere to the response format completely without fail. DO NOT USE ANY OTHER FORMAT TO SUMMARISE THE DATA.\nTake the data shown after this line. 
+                      Data: \n""" + str(data) + "\nEND OF DATA. when the user asked: " + str(message) + f"\nEND OF USER PROMPT. SET NAME OF PLAYERS TO ONE OF THE OPTIONS: " + str(players_name) + 
+                      '''\nCONFIRM IF THE OUTPUT DATA MATCHES THE QUERY USING COMMON SENSE BEFORE SHOWING OUTPUT. 
+                      IF THE QUERY IS DIFFERENT, ANSWER THE QUERY ON YOUR OWN.''')
+
+        return data
+    
     def fetchCricStats(input_query, message: str) -> str:
         print("CricStats Called")
         print(input_query)
-        players = input_query.get('players', [])
+        oldPlayers = input_query.get('players', [])
 
         # Matching every player name to our players list.
-        players = match_players(players)
+        players = match_players(oldPlayers)
         print(players)
+
+        if len(players) == 0:
+            if type(oldPlayers) == type("String"):
+                return f"{oldPlayers} is not playing today."
+            if len(oldPlayers) == 1:
+                return f"{oldPlayers[0]} is not playing today."
+            else:
+                return "No matching players found!"
 
         columns = input_query['columns']       
 
@@ -249,7 +325,17 @@ def agentAI(message: str, all_players: list) -> str:
         data = search.result[columns]
         print(data)
 
-        data = gemini(f"""BE VERY PRECISE AND TO THE POINT, DO NOT EXTEND. TALK IN 1-2 LINES, example: 'The wickets taken by Pandya in his last match was 4.' and 'Sorry, I am missing the data'. TALK LIKE A HUMAN. IF THE DATA IS NOT PRESENT OR SILLY, ANSWER THE QUERY USING YOUR OWN DATA. You are talking to the user who doesn't have access to the database. Continue the response format to answer the user's query. User's query is given at the bottom. Talk to them like a helpful agent WITHOUT MENTIONING YOURSELF. TALK TO THEM LIKE A HUMAN. Adhere to the response format completely without fail. DO NOT USE ANY OTHER FORMAT TO SUMMARISE THE DATA.\nTake the data shown after this line. Data: \n""" + str(data) + "\nEND OF DATA. when the user asked: " + str(message) + f"\nEND OF USER PROMPT. \nREMEMBER, THIS DATA WAS ASKED WITH QUERY: from_date = {from_date}, to_date = {to_date}, matchtype = {matchtype}, betweenovers = {betweenovers}, innings = {innings}, sex = {sex}, playersteams = {playersteams}, oppositionbatters = {oppositionbatters}, oppositionbowlers = {oppositionbowlers}, oppositionteams = {oppositionteams}, venue = {venue}, event = {event}, matchresult = {matchresult}, superover = {superover}, battingposition = {battingposition}, bowlingposition = {bowlingposition}, fielders = {fielders}, sumDataOrNot = {sumstats}). CONFIRM IF THE OUTPUT DATA MATCHES THE QUERY USING COMMON SENSE BEFORE SHOWING OUTPUT. IF THE QUERY IS DIFFERENT, SAY YOU DON'T HAVE DATA.")
+        data = gemini(f"""
+                      You are a helpful humanoid agent. Answer the user like a normal human without mentioning your name.
+                      Be very precise and to the point, do not extend. Talk in 1-2 lines.
+                      Example: 'The wickets taken by Pandya in his last match was 4.'. 
+                      TALK LIKE A HUMAN. IF THE DATA IS NOT PRESENT OR SILLY, ANSWER THE QUERY USING YOUR OWN DATA. 
+                      Fill the query as per the response format for the user's query is given at the bottom.
+                      
+                      Adhere to the response format completely without fail. DO NOT USE ANY OTHER FORMAT TO SUMMARISE THE DATA.\nTake the data shown after this line. 
+                      Data: """ + str(data) + "\nEND OF DATA. when the user asked: " + str(message) + f'''\nEND OF USER PROMPT. \nREMEMBER, THIS DATA WAS ASKED WITH QUERY: from_date = {from_date}, to_date = {to_date}, matchtype = {matchtype}, betweenovers = {betweenovers}, innings = {innings}, sex = {sex}, playersteams = {playersteams}, oppositionbatters = {oppositionbatters}, oppositionbowlers = {oppositionbowlers}, oppositionteams = {oppositionteams}, venue = {venue}, event = {event}, matchresult = {matchresult}, superover = {superover}, battingposition = {battingposition}, bowlingposition = {bowlingposition}, fielders = {fielders}, sumDataOrNot = {sumstats}). 
+                      CONFIRM IF THE OUTPUT DATA MATCHES THE QUERY USING COMMON SENSE BEFORE SHOWING OUTPUT. 
+                      IF THE QUERY IS DIFFERENT, ANSWER THE QUERY ON YOUR OWN.''')
 
         return data
 
@@ -267,9 +353,34 @@ def agentAI(message: str, all_players: list) -> str:
         )
         
         return chat_completion.choices[0].message.content
+    
+    def quickDB(input_query: str, response_format: str, message: str):
+        """
+        Execute a database search using the provided input query.
+        """
+
+        query = ''
+
+        try:
+            print(type(input_query))
+            print(input_query)
+            query = gemini(QUICK_PROMPT + str(input_query))
+            print(query)
+
+            parsed_response = json.loads(query)
+            print("Parsed:\n", parsed_response, end = '\n')
+
+            data = fetchDataStats(parsed_response, message)
+            
+            if len(data) == 0:
+                return searchDB(input_query, response_format, message)
+            return data
+        except Exception as e:
+            return "No data found, error: " + e
+                
 
     def searchDB(input_query: str, response_format: str, message: str):
-        """
+        """ 
         Execute a database search using the provided input query.
         """
 
@@ -336,11 +447,15 @@ def agentAI(message: str, all_players: list) -> str:
                 return data
             
             except Exception as e2:
-                print(f"Error occurred: {str(e2)}")
-                return None
+                return gemini(f'''Use your own knowledge to answer the user's query:
+                                    input_query: {input_query}
+                                    response_format: {response_format}
+                                    message: {message}
+
+                                Give a 1-2 line answer. Be direct and concise.
+                              ''')
 
     try:
-        print("Works?")
         response = gemini(AGENT_PROMPT + message)
         print(response)
         parsed_response = json.loads(response)
@@ -348,18 +463,49 @@ def agentAI(message: str, all_players: list) -> str:
         action = parsed_response["Action"]
         action_input = parsed_response["Action Input"]
         response_format = parsed_response["Response Format"]
-        
+        result = ""
         # Process based on action type
         if action == "Calculator":
             result = calculator(action_input, response_format)
         elif action == "SearchDB":
             print("SearchDB Called")
             result = searchDB(message, response_format, message)
+        elif action == "QuickDB":
+            print("QuickDB Called")
+            result = quickDB(message, response_format, message)
+        elif action == 'DirectResponse':
+            result = gemini(DIRECT_PROMPT + response_format + "\nand this is what the user initially asked: \n"+ message)
         else:
             return "I don't understand the question. Please try rephrasing it."
+        
         print(result)
         return result
         
     except Exception as e:
         return f"An error occurred: {str(e)}"
     
+
+
+
+
+
+import pandas as pd
+
+
+def get_response(message,all_players_id):
+    df = pd.read_csv(os.path.join(BASE_DIR,'./data/updated_llm_players.csv'))
+    all_players = []
+    all_players_variations = {}
+    for player_id in all_players_id:
+        player_row = df[df['id'] == player_id]
+        if not player_row.empty:
+            player_name = player_row['player name'].values[0]
+            all_players.append(player_name)
+            variations = eval(player_row['player names'].values[0])
+            all_players_variations[player_name] = variations
+    response = agentAI(message, all_players_id, all_players, all_players_variations)
+    return response
+
+    
+
+

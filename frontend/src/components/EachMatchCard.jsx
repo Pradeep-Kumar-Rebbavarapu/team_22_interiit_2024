@@ -72,16 +72,16 @@ export default function EachMatchCard({match,id}) {
           <div className="h-px bg-gray-300 flex-1" />
         </div>
 
-        <h2 className="text-2xl md:text-3xl font-bold text-center">Pick a team made by an expert (Guru)</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-center">Pick a Team Made by our AI</h2>
 
         {/* Expert Cards Container */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="w-1/2 flex justify-center items-center mx-auto">
           {/* Expert Card */}
           <Card className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <User className="w-12 h-12 text-gray-400" />
-                <span className="text-xl font-semibold">Guru Kasu</span>
+                <span className="text-xl font-semibold">Dream 11 AI</span>
               </div>
               <div className="flex items-center gap-2">
                 <Award className="w-6 h-6 text-yellow-500" />
@@ -93,12 +93,10 @@ export default function EachMatchCard({match,id}) {
               <div className="text-sm mb-2">Mega</div>
               <div className="flex justify-between mb-4">
                 <div>
-                  <div>SA</div>
-                  <div className="text-3xl font-bold">4</div>
+                  <div>{match[0]?.team_a?.name}</div>
                 </div>
                 <div>
-                  <div>IND</div>
-                  <div className="text-3xl font-bold">7</div>
+                  <div>{match[0]?.team_b?.name}</div>
                 </div>
               </div>
               <div className="flex justify-between">
@@ -128,59 +126,7 @@ export default function EachMatchCard({match,id}) {
             </div>
           </Card>
 
-          {/* Additional Expert Cards (for demonstration) */}
-          {[...Array(2)].map((_, index) => (
-            <Card key={index} className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <User className="w-12 h-12 text-gray-400" />
-                  <span className="text-xl font-semibold">Expert {index + 2}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Award className="w-6 h-6 text-yellow-500" />
-                  <span className="text-xl font-semibold">{8 + index}</span>
-                </div>
-              </div>
-
-              <div className="bg-green-600 rounded-lg p-4 text-white">
-                <div className="text-sm mb-2">Mega</div>
-                <div className="flex justify-between mb-4">
-                  <div>
-                    <div>SA</div>
-                    <div className="text-3xl font-bold">{5 + index}</div>
-                  </div>
-                  <div>
-                    <div>IND</div>
-                    <div className="text-3xl font-bold">{6 - index}</div>
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <div className="flex items-center gap-2">
-                    <User className="w-12 h-12 bg-white text-green-600 rounded-full p-2" />
-                    <div>
-                      <div className="text-sm">Player 1</div>
-                      <div className="bg-black rounded-full w-6 h-6 flex items-center justify-center text-sm">C</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <User className="w-12 h-12 bg-white text-green-600 rounded-full p-2" />
-                    <div>
-                      <div className="text-sm">Player 2</div>
-                      <div className="bg-black rounded-full w-6 h-6 flex items-center justify-center text-sm">VC</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-4">
-                <div className="text-amber-800 font-semibold">{7.5 + index}K times picked</div>
-                <Button variant="outline" className="gap-2 w-full sm:w-auto">
-                  <Users className="w-5 h-5" />
-                  PICK THIS TEAM
-                </Button>
-              </div>
-            </Card>
-          ))}
+          
         </div>
       </div>
     </div>

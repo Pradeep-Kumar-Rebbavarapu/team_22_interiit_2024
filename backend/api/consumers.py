@@ -3,7 +3,7 @@ import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import MatchInfo, Chat
-from .agent import agentAI
+from .agent import get_response
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -84,6 +84,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def run_agent_ai(self, message, all_players):
         # Wrap the synchronous agentAI function 
-        return agentAI(message, all_players)
+        return get_response(message, all_players)
 
 # Serializer and List View remain the same as in the previous example
