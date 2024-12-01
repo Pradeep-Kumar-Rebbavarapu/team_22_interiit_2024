@@ -1,6 +1,11 @@
 from django.db import models
 from django.utils import timezone
 import random
+from .inference import get_response
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.core.serializers.json import DjangoJSONEncoder
+import json
 
 # Meta information model
 class MetaData(models.Model):
@@ -62,7 +67,7 @@ class MatchInfo(models.Model):
     target_runs = models.IntegerField(null=True, blank=True)
     target_overs = models.IntegerField(null=True, blank=True)
     meta = models.OneToOneField(MetaData, on_delete=models.CASCADE)
-
+    inference_row = models.JSONField(null=True,blank=True,default=None)
     def random_prize_pool():
         return f"${random.randint(1000, 10000)}"
     def random_first_prize():
@@ -332,3 +337,20 @@ class PlayerStatistics(models.Model):
     def __str__(self):
         return self.player_name
 
+
+
+@receiver(post_save, sender=MatchInfo)
+def update_inference_row(sender, instance, **kwargs):
+    try:
+        team_a_players = list(instance.team_a_players.values_list('name', flat=True))
+        team_b_players = list(instance.team_b_players.values_list('name', flat=True))
+        
+        inference_list = get_response(team_a_players,team_b_players, instance.match_type, instance.date)
+        
+        instance.inference_row = inference_list
+        
+        MatchInfo.objects.filter(pk=instance.pk).update(
+            inference_row=json.dumps(inference_list, cls=DjangoJSONEncoder)
+        )
+    except Exception as e:
+        print(f"Error updating inference row: {e}")
