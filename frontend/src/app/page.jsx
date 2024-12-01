@@ -1,13 +1,12 @@
-import { Trophy } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import Link from 'next/link'
-import { getMatches } from "@/api"
-
-
+import { Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
+import { getMatches } from "@/api";
 
 export default async function Page() {
-  const matches = await getMatches({limit:20})
+  const matches = await getMatches({ limit: 20 });
+  console.log(matches);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-900 to-red-800">
@@ -27,8 +26,8 @@ export default async function Page() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {matches.map((match) => (
-            <Card 
-              key={match.id} 
+            <Card
+              key={match.id}
               className="bg-white/90 backdrop-blur-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:scale-105"
             >
               <CardContent className="p-4">
@@ -45,29 +44,31 @@ export default async function Page() {
                 <div className="mb-3 flex justify-between text-center">
                   <div>
                     <p className="text-xs text-gray-600">Prize Pool</p>
-                    <p className="text-sm font-bold">₹1,00,00,000</p>
+                    <p className="text-sm font-bold">{match.prize_pool}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-600">1st Prize</p>
-                    <p className="text-sm font-bold">₹50,00,000</p>
+                    <p className="text-sm font-bold">{match.first_prize}</p>
                   </div>
                 </div>
                 <div className="mb-3 flex justify-between text-xs text-gray-600">
-                  <span>27 spots left</span>
-                  <span>58 spots</span>
+                  <span>{match.teama_spots_left} spots left</span>
+                  <span>{match.teamb_spots_left} spots</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-gray-600">Join for</p>
                     <p>
-                      <span className="text-xs text-gray-400 line-through">₹49</span>{' '}
-                      <span className="text-sm font-bold">₹1</span>
+                      <span className="text-xs text-gray-400 line-through">
+                        ₹49
+                      </span>{" "}
+                      <span className="text-sm font-bold">
+                        ₹{match.amount_to_be_paid}
+                      </span>
                     </p>
                   </div>
                   <Link href={`/EachMatch/${match.id}`}>
-                    <Button 
-                      className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 transition-all duration-300 ease-in-out hover:shadow-md active:scale-95"
-                    >
+                    <Button className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 transition-all duration-300 ease-in-out hover:shadow-md active:scale-95">
                       JOIN NOW
                     </Button>
                   </Link>
@@ -78,5 +79,5 @@ export default async function Page() {
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+import random
 
 # Meta information model
 class MetaData(models.Model):
@@ -61,11 +62,22 @@ class MatchInfo(models.Model):
     target_runs = models.IntegerField(null=True, blank=True)
     target_overs = models.IntegerField(null=True, blank=True)
     meta = models.OneToOneField(MetaData, on_delete=models.CASCADE)
-    prize_pool = models.CharField(null=True, blank=True, max_length=225,default=None)
-    first_prize = models.CharField(null=True, blank=True, max_length=225,default=None)
-    amount_to_be_paid = models.IntegerField(null=True, blank=True, default=None)
-    teama_spots_left = models.IntegerField(null=True, blank=True, default=None)
-    teamb_spots_left = models.IntegerField(null=True, blank=True, default=None)
+
+    def random_prize_pool():
+        return f"${random.randint(1000, 10000)}"
+    def random_first_prize():
+        return f"${random.randint(500, 5000)}"
+    def random_amount_to_be_paid():
+        return random.randint(100, 1000)
+    def random_spots_left():
+        return random.randint(1, 11)
+
+    prize_pool = models.CharField(max_length=225, default=random_prize_pool)
+    first_prize = models.CharField(max_length=225, default=random_first_prize)
+    amount_to_be_paid = models.IntegerField(default=random_amount_to_be_paid)
+    teama_spots_left = models.IntegerField(default=random_spots_left)
+    teamb_spots_left = models.IntegerField(default=random_spots_left)
+
     def __str__(self):
         return f"Match {self.match_type} on {self.date}"
 
