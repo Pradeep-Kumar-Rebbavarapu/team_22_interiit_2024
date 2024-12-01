@@ -23,7 +23,7 @@ class TeamSerializer(serializers.ModelSerializer):
     players = PlayerSerializer(many=True)
     class Meta:
         model = Team
-        fields = "__all__"
+        fields = ["id","name","players"]
 
 # Outcome serializer
 class OutcomeSerializer(serializers.ModelSerializer):
@@ -101,4 +101,10 @@ class MessageSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
+        fields = "__all__"
+
+
+class MatchPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatchInfo
         fields = "__all__"

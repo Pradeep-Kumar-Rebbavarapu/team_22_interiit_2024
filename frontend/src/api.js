@@ -46,6 +46,14 @@ export function getMatches(params = {}, token = null, options = {}) {
   return apiCall("matches", params, token, options);
 }
 
+export function getAllPlayers(params = {}, token = null, options = {}) {
+  return apiCall("players", params, token, options);
+}
+
+export function getAllTeams(params = {}, token = null, options = {}) {
+  return apiCall("teams", params, token, options);
+}
+
 export function getPlayerData(params = {}, token = null, options = {}) {
   return apiCall("get-player-report", params, token, options);
 }

@@ -2,10 +2,11 @@ from django.db import models
 from django.utils import timezone
 import random
 from .inference import get_response
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save,pre_save
 from django.dispatch import receiver
 from django.core.serializers.json import DjangoJSONEncoder
 import json
+
 
 # Meta information model
 class MetaData(models.Model):
@@ -45,28 +46,28 @@ class MatchInfo(models.Model):
         ('odi', 'ODI'),
         ('t20', 'T20'),
     ]
-    balls_per_over = models.IntegerField(default=6)
-    city = models.CharField(max_length=100)
-    date = models.DateField()
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    match_type = models.CharField(max_length=10, choices=MATCH_TYPE_CHOICES)
-    team_type = models.CharField(max_length=50)
-    players_data = models.JSONField()
-    match_type_number = models.IntegerField()
-    overs = models.IntegerField()
-    season = models.CharField(max_length=20)
-    team_type = models.CharField(max_length=50)
-    venue = models.CharField(max_length=100)
-    player_of_match = models.CharField(max_length=100)
-    team_a = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_a', null=True, blank=True)
+    balls_per_over = models.IntegerField(default=6,null=True,blank=True)
+    city = models.CharField(max_length=100,null=True,blank=True,default=None)
+    date = models.DateField(null=True,blank=True,default=None)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES,null=True,blank=True,default=None)
+    match_type = models.CharField(max_length=10, choices=MATCH_TYPE_CHOICES,null=True,blank=True,default=None)
+    team_type = models.CharField(max_length=50,null=True,blank=True,default=None)
+    players_data = models.JSONField(null=True,blank=True,default=None)
+    match_type_number = models.IntegerField(null=True,blank=True,default=None)
+    overs = models.IntegerField(null=True,blank=True,default=None)
+    season = models.CharField(max_length=20,null=True,blank=True,default=None)
+    team_type = models.CharField(max_length=50,null=True,blank=True,default=None)
+    venue = models.CharField(max_length=100,null=True,blank=True,default=None)
+    player_of_match = models.CharField(max_length=100,null=True,blank=True,default=None)
+    team_a = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_a', null=True, blank=True,default=None)
     team_a_players = models.ManyToManyField('Player', related_name='team_a_matches', blank=True)
     team_b = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_b', null=True, blank=True)
     team_b_players = models.ManyToManyField('Player', related_name='team_b_matches', blank=True)
-    toss_decision = models.CharField(max_length=10)
-    toss_winner = models.CharField(max_length=100)
-    target_runs = models.IntegerField(null=True, blank=True)
-    target_overs = models.IntegerField(null=True, blank=True)
-    meta = models.OneToOneField(MetaData, on_delete=models.CASCADE)
+    toss_decision = models.CharField(max_length=10,null=True,blank=True,default=None)
+    toss_winner = models.CharField(max_length=100,null=True,blank=True,default=None)
+    target_runs = models.IntegerField(null=True, blank=True,default=None)
+    target_overs = models.IntegerField(null=True, blank=True,default=None)
+    meta = models.OneToOneField(MetaData, on_delete=models.CASCADE,null=True,blank=True,default=None)
     inference_row = models.JSONField(null=True,blank=True,default=None)
     def random_prize_pool():
         return f"${random.randint(1000, 10000)}"
@@ -77,11 +78,11 @@ class MatchInfo(models.Model):
     def random_spots_left():
         return random.randint(1, 11)
 
-    prize_pool = models.CharField(max_length=225, default=random_prize_pool)
-    first_prize = models.CharField(max_length=225, default=random_first_prize)
-    amount_to_be_paid = models.IntegerField(default=random_amount_to_be_paid)
-    teama_spots_left = models.IntegerField(default=random_spots_left)
-    teamb_spots_left = models.IntegerField(default=random_spots_left)
+    prize_pool = models.CharField(max_length=225, default=random_prize_pool,null=True,blank=True)
+    first_prize = models.CharField(max_length=225, default=random_first_prize,null=True,blank=True)
+    amount_to_be_paid = models.IntegerField(default=random_amount_to_be_paid,null=True,blank=True)
+    teama_spots_left = models.IntegerField(default=random_spots_left,null=True,blank=True)
+    teamb_spots_left = models.IntegerField(default=random_spots_left,null=True,blank=True)
 
     def __str__(self):
         return f"Match {self.match_type} on {self.date}"
@@ -342,10 +343,14 @@ class PlayerStatistics(models.Model):
 @receiver(post_save, sender=MatchInfo)
 def update_inference_row(sender, instance, **kwargs):
     try:
-        team_a_players = list(instance.team_a_players.values_list('name', flat=True))
-        team_b_players = list(instance.team_b_players.values_list('name', flat=True))
+        # team_a_players_ids = list(instance.team_a_players.values_list('identifier', flat=True))
+        team_a_players = list(instance.team_a_players.values_list('unique_name', flat=True))
+        # team_b_players_ids = list(instance.team_b_players.values_list('identifier', flat=True))
+        team_b_players = list(instance.team_b_players.values_list('unique_name', flat=True))
         
-        inference_list = get_response(team_a_players,team_b_players, instance.match_type, instance.date)
+        # inference_list = get_response(team_a_players,team_b_players,team_a_players_ids,team_b_players_ids, instance.match_type, instance.date)
+
+        inference_list = get_response(team_a_players,team_b_players,instance.match_type, instance.date)
         
         instance.inference_row = inference_list
         
@@ -354,3 +359,4 @@ def update_inference_row(sender, instance, **kwargs):
         )
     except Exception as e:
         print(f"Error updating inference row: {e}")
+

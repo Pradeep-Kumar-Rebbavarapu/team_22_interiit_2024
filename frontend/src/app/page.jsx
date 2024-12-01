@@ -1,4 +1,4 @@
-import { Trophy } from "lucide-react";
+import { Trophy, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
@@ -17,6 +17,12 @@ export default async function Page() {
           </div>
           <span className="text-white text-lg font-bold">Dream11</span>
         </div>
+        <Link href="/AddMatch">
+          <Button className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 transition-all duration-300 ease-in-out hover:shadow-md active:scale-95">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Match
+          </Button>
+        </Link>
       </header>
 
       <main className="px-4 py-6">
@@ -81,3 +87,4 @@ export default async function Page() {
     </div>
   );
 }
+
