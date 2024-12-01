@@ -1,20 +1,21 @@
-"use client";
+'use client'
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { ArrowLeft, Info, Minus, ChevronRight, Trophy, ChevronDown, ChevronUp, Loader2, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { MatchFC, Player } from "@/types";
 import Link from "next/link";
 
-function PlayerCard({
+const PlayerCard = ({
   player,
   isSelected,
   onToggle,
   isPredicted = false,
   current_year,
   match_type,
-}) {
+}) => {
+  const currentYear = current_year || new Date().getFullYear();
+
   return (
     <div
       className={`flex items-center p-3 sm:p-4 border-b transition-colors ${
@@ -40,7 +41,7 @@ function PlayerCard({
             </span>
           </div>
           <Link
-            href={`/PlayerData/${player.identifier}/${current_year}/${match_type?.toUpperCase() || 'ALL'}`}
+            href={`/PlayerData/${player.identifier}/${currentYear}/${match_type?.toUpperCase() || 'ALL'}`}
             className="text-blue-600 hover:underline text-sm mt-1 flex items-center"
           >
             <User className="w-4 h-4 mr-1" />
@@ -57,7 +58,7 @@ function PlayerCard({
             className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-500"
             onClick={(e) => {
               e.stopPropagation();
-              onToggle();
+              onToggle(player.id);
             }}
           >
             {isSelected ? (
@@ -70,18 +71,9 @@ function PlayerCard({
       </div>
     </div>
   );
-}
-
-// Simulated API call
-const predictPlayers = async (players) => {
-  await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate 2 second delay
-  return players.slice(0, 11); // Return first 11 players as predicted
 };
 
-export default function MatchDetailClient({
-  matchData,
-  current_year
-}) {
+const MatchDetailClient = ({ matchData, current_year }) => {
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [activeTab, setActiveTab] = useState("batters");
   const [showPredictedPlayers, setShowPredictedPlayers] = useState(false);
@@ -102,11 +94,11 @@ export default function MatchDetailClient({
   };
 
   const selectedTeamCounts = {
-    team_a: selectedPlayers.filter((player) =>
-      playersTeamA.map((p) => p.identifier).includes(player)
+    team_a: selectedPlayers.filter((playerId) =>
+      playersTeamA.some((p) => p.id === playerId)
     ).length,
-    team_b: selectedPlayers.filter((player) =>
-      playersTeamB.map((p) => p.identifier).includes(player)
+    team_b: selectedPlayers.filter((playerId) =>
+      playersTeamB.some((p) => p.id === playerId)
     ).length,
   };
 
@@ -130,8 +122,23 @@ export default function MatchDetailClient({
     setShowPredictedPlayers(true);
     setIsPredictedSectionOpen(true);
     try {
-      const predicted = await predictPlayers(players);
-      setPredictedPlayers(predicted);
+      const response = await fetch('http://localhost:8000/backend/api/v1/predict-players/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          match_id: matchData.id,
+          selected_players_id: selectedPlayers,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to predict players');
+      }
+
+      const data = await response.json();
+      setPredictedPlayers(data.predicted_players);
     } catch (error) {
       console.error("Failed to predict players:", error);
     } finally {
@@ -140,7 +147,7 @@ export default function MatchDetailClient({
   };
 
   const handleUseThisTeam = () => {
-    setSelectedPlayers(predictedPlayers.map((player) => player.identifier));
+    setSelectedPlayers(predictedPlayers.map((player) => player.id));
     setIsPredictedSectionOpen(false);
   };
 
@@ -274,12 +281,12 @@ export default function MatchDetailClient({
               <>
                 {predictedPlayers.map((player) => (
                   <PlayerCard
-                    key={player.identifier}
+                    key={player.id}
                     player={player}
-                    isSelected={selectedPlayers.includes(player.identifier)}
-                    onToggle={() => togglePlayer(player.identifier)}
+                    isSelected={selectedPlayers.includes(player.id)}
+                    onToggle={togglePlayer}
                     isPredicted={true}
-                    current_year={2024}
+                    current_year={current_year}
                     match_type={matchData.match_type}
                   />
                 ))}
@@ -310,19 +317,20 @@ export default function MatchDetailClient({
           ))}
         </div>
 
-        {filteredPlayers.map((player, index) => (
+        {filteredPlayers.map((player) => (
           <PlayerCard
-            key={index}
+            key={player.id}
             player={player}
-            isSelected={selectedPlayers.includes(player.identifier)}
-            onToggle={() => togglePlayer(player.identifier)}
-            current_year={2024}
+            isSelected={selectedPlayers.includes(player.id)}
+            onToggle={togglePlayer}
+            current_year={current_year}
             match_type={matchData.match_type}
           />
         ))}
       </div>
-
-      
     </div>
   );
-}
+};
+
+export default MatchDetailClient;
+

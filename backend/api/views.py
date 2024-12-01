@@ -1,5 +1,5 @@
 from rest_framework import generics
-from .serializers import MatchSerializer, ChatSerializer, MessageSerializer
+from .serializers import MatchSerializer, ChatSerializer, MessageSerializer,PlayerSerializer
 from .models import MatchInfo, Chat, Message, Player
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
@@ -229,4 +229,40 @@ class GetPlayerReport(APIView):
                 'success': False,
                 'error': f'An unexpected error occurred: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
+import random
+
+class PredictPlayers(APIView):
+    def post(self, request):
+        data = request.data
+        match_id = data.get('match_id')
+        selected_players_id = data.get('selected_players_id', [])
+
+        try:
+            match = MatchInfo.objects.get(id=match_id)
+
+            team_a_players = match.team_a_players.all()
+            team_b_players = match.team_b_players.all()
+            all_players_id = list(team_a_players.values_list('id', flat=True)) + \
+                             list(team_b_players.values_list('id', flat=True))
+
+            print("-------------- ML MODEL STARTED --------------")
+            if selected_players_id:
+                remaining_players = [pid for pid in all_players_id if pid not in selected_players_id]
+                random_selection = random.sample(remaining_players, k=11 - len(selected_players_id))
+                final_selection = selected_players_id + random_selection
+            else:
+                final_selection = random.sample(all_players_id, k=11)
+
+            predicted_players = Player.objects.filter(id__in=final_selection)
+            serializer = PlayerSerializer(predicted_players, many=True)
+
+            return Response({
+                'predicted_players': serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except MatchInfo.DoesNotExist:
+            return Response({'error': 'Match not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
