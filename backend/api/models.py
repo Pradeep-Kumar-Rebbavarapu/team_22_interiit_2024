@@ -59,16 +59,16 @@ class MatchInfo(models.Model):
     team_type = models.CharField(max_length=50,null=True,blank=True,default=None)
     venue = models.CharField(max_length=100,null=True,blank=True,default=None)
     player_of_match = models.CharField(max_length=100,null=True,blank=True,default=None)
-    team_a = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_a', null=True, blank=True,default=None)
-    team_a_players = models.ManyToManyField('Player', related_name='team_a_matches', blank=True)
-    team_b = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='matches_b', null=True, blank=True)
-    team_b_players = models.ManyToManyField('Player', related_name='team_b_matches', blank=True)
+    team_a = models.TextField(null=True, blank=True,default=None)
+    team_a_players = models.TextField(null=True ,blank=True)
+    team_b = models.TextField(null=True, blank=True)
+    team_b_players = models.TextField(null=True ,blank=True)
     toss_decision = models.CharField(max_length=10,null=True,blank=True,default=None)
     toss_winner = models.CharField(max_length=100,null=True,blank=True,default=None)
     target_runs = models.IntegerField(null=True, blank=True,default=None)
     target_overs = models.IntegerField(null=True, blank=True,default=None)
     meta = models.OneToOneField(MetaData, on_delete=models.CASCADE,null=True,blank=True,default=None)
-    inference_row = models.JSONField(null=True,blank=True,default=None)
+    # inference_row = models.JSONField(null=True,blank=True,default=None)
     def random_prize_pool():
         return f"${random.randint(1000, 10000)}"
     def random_first_prize():
@@ -81,8 +81,7 @@ class MatchInfo(models.Model):
     prize_pool = models.CharField(max_length=225, default=random_prize_pool,null=True,blank=True)
     first_prize = models.CharField(max_length=225, default=random_first_prize,null=True,blank=True)
     amount_to_be_paid = models.IntegerField(default=random_amount_to_be_paid,null=True,blank=True)
-    teama_spots_left = models.IntegerField(default=random_spots_left,null=True,blank=True)
-    teamb_spots_left = models.IntegerField(default=random_spots_left,null=True,blank=True)
+    spots_left = models.IntegerField(default=random_spots_left,null=True,blank=True)
 
     def __str__(self):
         return f"Match {self.match_type} on {self.date}"
