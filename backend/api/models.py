@@ -35,24 +35,13 @@ class MatchInfo(models.Model):
     city = models.CharField(max_length=100,null=True,blank=True,default=None)
     date = models.DateField(null=True,blank=True,default=None)
     match_type = models.CharField(max_length=10, choices=MATCH_TYPE_CHOICES,null=True,blank=True,default=None)
-    team_type = models.CharField(max_length=50,null=True,blank=True,default=None)
-    players_data = models.JSONField(null=True,blank=True,default=None)
-    match_type_number = models.IntegerField(null=True,blank=True,default=None)
-    overs = models.IntegerField(null=True,blank=True,default=None)
-    season = models.CharField(max_length=20,null=True,blank=True,default=None)
-    team_type = models.CharField(max_length=50,null=True,blank=True,default=None)
-    venue = models.CharField(max_length=100,null=True,blank=True,default=None)
-    player_of_match = models.CharField(max_length=100,null=True,blank=True,default=None)
-    team_a = models.TextField(null=True, blank=True,default=None)
-    team_a_players = models.TextField(null=True ,blank=True)
-    team_b = models.TextField(null=True, blank=True)
-    team_b_players = models.TextField(null=True ,blank=True)
-    toss_decision = models.CharField(max_length=10,null=True,blank=True,default=None)
-    toss_winner = models.CharField(max_length=100,null=True,blank=True,default=None)
-    target_runs = models.IntegerField(null=True, blank=True,default=None)
-    target_overs = models.IntegerField(null=True, blank=True,default=None)
-    meta = models.OneToOneField(MetaData, on_delete=models.CASCADE,null=True,blank=True,default=None)
-    # inference_row = models.JSONField(null=True,blank=True,default=None)
+    
+    team_a = models.CharField(max_length=225,null=True,blank=True,default=None)
+    team_a_players = models.ManyToManyField('Player', related_name='team_a_matches', blank=True)
+    team_b = models.CharField(max_length=225,null=True,blank=True,default=None)
+    team_b_players = models.ManyToManyField('Player', related_name='team_b_matches', blank=True)
+
+    inference_row = models.JSONField(null=True,blank=True,default=None)
     def random_prize_pool():
         return f"${random.randint(1000, 10000)}"
     def random_first_prize():
