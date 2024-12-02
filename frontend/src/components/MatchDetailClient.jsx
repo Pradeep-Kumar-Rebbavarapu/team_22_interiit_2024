@@ -41,7 +41,7 @@ const PlayerCard = ({
             </span>
           </div>
           <Link
-            href={`/PlayerData/${player.identifier}/${currentYear}/${match_type?.toUpperCase() || 'ALL'}`}
+            href={`/PlayerData/${player.identifier}}`}
             className="text-blue-600 hover:underline text-sm mt-1 flex items-center"
           >
             <User className="w-4 h-4 mr-1" />
@@ -191,7 +191,7 @@ const MatchDetailClient = ({ matchData, current_year }) => {
         <div className="flex justify-center items-center gap-4 sm:gap-8 mb-3 sm:mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-600 flex items-center justify-center text-xs sm:text-sm">
-              {matchData.team_a.name.slice(0,3) }
+              {matchData.team_a.slice(0,3) }
             </div>
             <span className="text-xl sm:text-2xl font-bold">
               {selectedTeamCounts.team_a}
@@ -199,7 +199,7 @@ const MatchDetailClient = ({ matchData, current_year }) => {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex items-center justify-center text-xs sm:text-sm">
-              {matchData.team_b.name.slice(0,3)}
+              {matchData.team_b.slice(0,3)}
             </div>
             <span className="text-xl sm:text-2xl font-bold">
               {selectedTeamCounts.team_b}

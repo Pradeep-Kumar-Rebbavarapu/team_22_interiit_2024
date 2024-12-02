@@ -1,86 +1,13 @@
 from rest_framework import serializers
-from .models import MatchInfo, Team, MetaData, Official, Outcome, Inning, Delivery, Over, Extra, Wicket, Powerplay, Player, Message, Chat
+from .models import MatchInfo, Team, Player, Message, Chat
 
-# Official serializer
-class OfficialSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Official
-        fields = "__all__"
-
-# Meta information serializer
-class MetaDataSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MetaData
-        fields = "__all__"
 
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Player
         fields = ["id","identifier","name","role"]
 
-# Team serializer
-class TeamSerializer(serializers.ModelSerializer):
-    players = PlayerSerializer(many=True)
-    class Meta:
-        model = Team
-        fields = ["id","name","players"]
-
-# Outcome serializer
-class OutcomeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Outcome
-        fields = "__all__"
-
-# Extra serializer
-class ExtraSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Extra
-        fields = "__all__"
-
-# Wicket serializer
-class WicketSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Wicket
-        fields = "__all__"
-
-# Delivery serializer
-class DeliverySerializer(serializers.ModelSerializer):
-    extras = ExtraSerializer()
-    wickets = WicketSerializer(many=True)
-
-    class Meta:
-        model = Delivery
-        fields = "__all__"
-
-# Over serializer
-class OverSerializer(serializers.ModelSerializer):
-    deliveries = DeliverySerializer(many=True)
-
-    class Meta:
-        model = Over
-        fields = "__all__"
-
-# Innings serializer
-class InningsSerializer(serializers.ModelSerializer):
-    overs = OverSerializer(many=True)
-
-    class Meta:
-        model = Inning
-        fields = "__all__"
-
-# PowerPlay serializer
-class PowerPlaySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Powerplay
-        fields = "__all__"
-
-# Player serializer
-
-
-# Match serializer
 class MatchSerializer(serializers.ModelSerializer):
-    team_a = TeamSerializer()
-    team_b = TeamSerializer()
     team_a_players = PlayerSerializer(many=True)
     team_b_players = PlayerSerializer(many=True)
     class Meta:
@@ -105,6 +32,39 @@ class ChatSerializer(serializers.ModelSerializer):
 
 
 class MatchPostSerializer(serializers.ModelSerializer):
+    team_a_players = serializers.ListField(
+        child=serializers.CharField(),
+        write_only=True
+    )
+    team_b_players = serializers.ListField(
+        child=serializers.CharField(),
+        write_only=True
+    )
+
     class Meta:
         model = MatchInfo
         fields = "__all__"
+
+    def create(self, validated_data):
+        # Extract player names
+        team_a_player_names = validated_data.pop('team_a_players', [])
+        team_b_player_names = validated_data.pop('team_b_players', [])
+        print(team_b_player_names,team_a_player_names)
+        # Fetch player instances
+        team_a_players = list(Player.objects.filter(name__in=team_a_player_names))
+        team_b_players = list(Player.objects.filter(name__in=team_b_player_names))
+        print(team_a_players,team_b_players)
+        print(team_a_players,team_b_players)
+        if len(team_a_players) != len(team_a_player_names):
+            raise serializers.ValidationError("Some players in team_a not found.")
+        if len(team_b_players) != len(team_b_player_names):
+            raise serializers.ValidationError("Some players in team_b not found.")
+
+        # Create MatchInfo instance
+        match_info = super().create(validated_data)
+
+        # Add players to ManyToMany fields
+        match_info.team_a_players.set(team_a_players)
+        match_info.team_b_players.set(team_b_players)
+
+        return match_info

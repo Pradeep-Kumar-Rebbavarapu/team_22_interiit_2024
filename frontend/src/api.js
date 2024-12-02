@@ -55,9 +55,11 @@ export function getAllTeams(params = {}, token = null, options = {}) {
 }
 
 export function getPlayerData(params = {}, token = null, options = {}) {
-  return apiCall("get-player-report", params, token, options);
+  return apiCall(`get-player-report/${params.player_identifier}`,{}, token, options);
 }
 
 export function getMatchRelatedChats(params = {}, token = null, options = {}) {
   return apiCall("get-match-related-chats", params, token, options);
 }
+
+
