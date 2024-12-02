@@ -41,7 +41,7 @@ const PlayerCard = ({
             </span>
           </div>
           <Link
-            href={`/PlayerData/${player.identifier}}`}
+            href={`/PlayerData/${player.name}/${player.identifier}`}
             className="text-blue-600 hover:underline text-sm mt-1 flex items-center"
           >
             <User className="w-4 h-4 mr-1" />

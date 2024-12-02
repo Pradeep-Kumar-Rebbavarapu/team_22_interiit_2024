@@ -9,6 +9,7 @@ export default async function Page({ params }) {
     <div className="container mx-auto ">
       <CricketPlayerDashboard
       playerStats={playerStats}
+      player_name={params.player_name}
       />
     </div>
   )

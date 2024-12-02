@@ -2,7 +2,7 @@ const BASE_URL = "http://127.0.0.1:8000/backend" + "/api/v1";
 // const BASE_URL = "http://172.16.4.2:8080/backend" + "/api/v1";
 
 async function apiCall(endpoint, params = {}, token = null, options = {}) {
-  const url = `${BASE_URL}/${endpoint}/`;
+  const url = `${BASE_URL}/${endpoint}`;
 
   const queryParams = new URLSearchParams();
 
