@@ -30,11 +30,11 @@ export default function EachMatchCard({match,id}) {
           <div className="flex items-center justify-center gap-2 w-full">
             <div className="flex items-center gap-2">
               <Flag className="w-8 h-8" />
-              <span className="text-xl font-semibold">{match ? match[0].team_a.name : 'Team A'}</span>
+              <span className="text-xl font-semibold">{match ? match[0].team_a: 'Team A'}</span>
             </div>
             <span className="text-gray-400 mx-2">Vs</span>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-semibold">{match ? match[0].team_b.name : 'Team B'}</span>
+              <span className="text-xl font-semibold">{match ? match[0].team_b: 'Team B'}</span>
               <Flag className="w-8 h-8" />
             </div>
           </div>

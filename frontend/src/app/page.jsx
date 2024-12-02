@@ -38,14 +38,14 @@ export default async function Page() {
             >
               <CardContent className="p-4">
                 <h3 className="mb-3 text-center text-lg font-semibold text-gray-800">
-                  {`${match.team_a.name} vs ${match.team_b.name}`}
+                  {`${match.team_a} vs ${match.team_b}`}
                 </h3>
                 <div className="mb-3 flex items-center justify-between text-sm">
-                  <span className="font-medium">{match.team_a.name}</span>
+                  <span className="font-medium">{match.team_a}</span>
                   <span className="rounded-full bg-red-100 px-3 py-1 text-red-600 font-semibold">
                     {match.date}
                   </span>
-                  <span className="font-medium">{match.team_b.name}</span>
+                  <span className="font-medium">{match.team_b}</span>
                 </div>
                 <div className="mb-3 flex justify-between text-center">
                   <div>

@@ -1,250 +1,98 @@
-import logging
-from django.core.management.base import BaseCommand
 import os
-import json
-from django.conf import settings
-from django.db import transaction
-from api.models import (MetaData, MatchInfo, Team, Official, Outcome, 
-                        Player, Inning, Over, Delivery, Extra, Wicket, Powerplay)
-from tqdm import tqdm
+import django
 import random
+from django.core.management.base import BaseCommand
+from django.utils import timezone
+from api.inference import get_response
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+# Set up Django environment
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'your_project.settings')
+django.setup()
 
-# Configure logging
-logging.basicConfig(level=logging.ERROR, format='%(asctime)s %(levelname)s %(message)s')
-
-PLAYER_ROLES = ["WK", "BAT", "BOWL", "AR", "BAT", "BOWL", "AR", "BOWL", "BAT"]
-
+from api.models import MatchInfo, Player  # Replace with your actual app and model names
 class Command(BaseCommand):
-    help = "Command to upload match data to the server"
+    help = 'Populate MatchInfo model with random data and generate inference rows'
+
+    # International cricket teams
+    INTERNATIONAL_TEAMS = [
+        'India', 'Australia', 'England', 'Pakistan', 'South Africa', 
+        'New Zealand', 'West Indies', 'Sri Lanka', 'Bangladesh', 'Afghanistan',
+        'Ireland', 'Netherlands', 'Zimbabwe', 'Scotland', 'UAE'
+    ]
 
     def handle(self, *args, **options):
-        folder_name = input("Enter the folder name inside the data folder containing the JSON files: ")
-        data_folder = os.path.join(settings.BASE_DIR, 'data', folder_name)
-        json_files = [f for f in os.listdir(data_folder) if f.endswith('.json')]
-        
-        for filename in tqdm(json_files, desc="Processing files", position=0):
-            file_path = os.path.join(data_folder, filename)
+        # Clear existing MatchInfo entries (optional)
+        MatchInfo.objects.all().delete()
+
+        # Generate multiple matches
+        num_matches = 5  # You can adjust this number
+        for _ in range(num_matches):
+            # Randomly select two teams
+            team_a, team_b = random.sample(self.INTERNATIONAL_TEAMS, 2)
+
+            # Get all players
+            all_players = list(Player.objects.all())
+
+            # Ensure we have enough players
+            if len(all_players) < 22:
+                self.stdout.write(self.style.ERROR('Not enough players in the database!'))
+                return
+
+            # Randomly select 11 players for each team
+            team_a_players = random.sample(all_players, 11)
+            remaining_players = [p for p in all_players if p not in team_a_players]
+            team_b_players = random.sample(remaining_players, 11)
+
+            # Create match
+            match = MatchInfo.objects.create(
+                city=self.generate_random_city(),
+                date=self.generate_random_date(),
+                match_type=random.choice(['test', 'odi', 't20']),
+                team_a=team_a,
+                team_b=team_b,
+                prize_pool=f"${random.randint(1000, 10000)}",
+                first_prize=f"${random.randint(500, 5000)}",
+                amount_to_be_paid=random.randint(100, 1000),
+                teama_spots_left=random.randint(1, 11),
+                teamb_spots_left=random.randint(1, 11)
+            )
+
+            # Add players to the match
+            match.team_a_players.set(team_a_players)
+            match.team_b_players.set(team_b_players)
+
+            # Generate inference row
             try:
-                with open(file_path, 'r') as file:
-                    data = json.load(file)
-                    tqdm.write(self.style.SUCCESS(f'Processing file: {filename}'))
-                    self.create_match_data(data)
-                    os.system('cls' if os.name == 'nt' else 'clear')
-            except Exception as e:
-                logging.error(f'Failed to process file {filename}: {e}')
-                tqdm.write(self.style.ERROR(f'Failed to process file: {filename}'))
+                # Extract player names
+                team_a_players_names = list(match.team_a_players.values_list('name', flat=True))
+                team_b_players_names = list(match.team_b_players.values_list('name', flat=True))
 
-    @transaction.atomic
-    def create_match_data(self, data):
-        try:
-            # MetaData
-            meta_data = data.get("meta", {})
-            meta_obj = MetaData.objects.create(
-                data_version=meta_data.get("data_version"),
-                created=meta_data.get("created"),
-                revision=meta_data.get("revision")
-            )
-            tqdm.write(self.style.SUCCESS('MetaData created or retrieved'))
-
-            # MatchInfo
-            target_runs = None
-            target_overs = None
-            info = data.get("info", {})
-            for inning in data.get("innings", []):
-                if "target" in inning:
-                    target_runs = inning["target"].get("runs")
-                    target_overs = inning["target"].get("overs")
-                    break
-                
-            match_info = MatchInfo.objects.create(
-                balls_per_over=info.get("balls_per_over", 6),
-                city=info.get("city", ""),
-                date=info.get("dates", [""])[0],
-                gender=info.get("gender", ""),
-                match_type=info.get("match_type", "").lower(),
-                match_type_number=info.get("match_type_number", 0),
-                overs=info.get("overs", 0),
-                season=info.get("season", ""),
-                team_type=info.get("team_type", ""),
-                venue=info.get("venue", ""),
-                player_of_match=info.get("player_of_match", [""])[0],
-                toss_decision=info.get("toss", {}).get("decision", ""),
-                toss_winner=info.get("toss", {}).get("winner", ""),
-                target_overs=target_overs,
-                target_runs=target_runs,
-                meta=meta_obj
-            )
-            tqdm.write(self.style.SUCCESS('MatchInfo created'))
-
-            # Teams and Players
-            team_objs = {}
-            player_cache = {}
-
-            for team_name, players in info.get("players", {}).items():
-                team_obj, _ = Team.objects.get_or_create(name=team_name)
-                team_objs[team_name] = team_obj
-                peoples = info.get("registry", {})['people']
-                for player_name in players:
-                    identifier = peoples[player_name]
-                    if identifier not in player_cache:
-                        player_obj = Player.objects.filter(identifier=identifier).first()
-                        if not player_obj:
-                            logging.error(f'Player with identifier {identifier} not found')
-                            raise Exception(f'Player with identifier {identifier} not found')
-                        if not player_obj.gender:
-                            player_obj.gender = info.get("gender")
-                            player_obj.role = random.choice(PLAYER_ROLES)
-                            player_obj.save()
-                        player_cache[identifier] = player_obj
-                    team_obj.players.add(player_cache[identifier])
-                tqdm.write(self.style.SUCCESS(f'Team and players for {team_name} created or retrieved'))
-
-            # Set teams for MatchInfo
-            teams = list(info.get("teams", []))
-            if len(teams) == 2:
-                match_info.team_a = team_objs[teams[0]]
-                match_info.team_b = team_objs[teams[1]]
-                match_info.save()
-                tqdm.write(self.style.SUCCESS('Teams set for MatchInfo'))
-
-            # Officials
-            officials = info.get("officials", {})
-            Official.objects.create(
-                match_info=match_info,
-                umpire=officials.get("umpires", [None])[0],
-                match_referee=officials.get("match_referees", [None])[0],
-                tv_umpire=officials.get("tv_umpires", [None])[0]
-            )
-            tqdm.write(self.style.SUCCESS('Officials created'))
-
-            # Outcome
-            outcome = info.get("outcome", {})
-            Outcome.objects.create(
-                match_info=match_info,
-                runs=outcome.get("by", {}).get("runs"),
-                wickets=outcome.get("by", {}).get("wickets"),
-                winner=outcome.get("winner", "")
-            )
-            tqdm.write(self.style.SUCCESS('Outcome created'))
-
-            # Innings and Overs
-            innings = []
-            overs = []
-            deliveries = []
-            extras = []
-            wickets = []
-
-            player_scores = {key: {"runs": 0, "wickets": 0, "balls_played": 0, "balls_delivered": 0, "not_out": False, "strike_rate": 0, "runs_taken": 0, "economy": 0, "catches": 0, "stumpings": 0} for key, value in player_cache.items()}
-
-            for inning_data in data.get("innings", []):
-                inning = Inning(
-                    match_info=match_info,
-                    team=Team.objects.get(name=inning_data.get("team", ""))
+                # Generate inference data
+                inference_list = get_response(
+                    team_a_players_names, 
+                    team_b_players_names, 
+                    match.match_type, 
+                    match.date
                 )
-                innings.append(inning)
-                for over_data in inning_data.get("overs", []):
-                    over = Over(
-                        inning=inning,
-                        over_number=over_data.get("over", 0)
-                    )
-                    overs.append(over)
-                    for delivery_data in over_data.get("deliveries", []):
-                        batter_name, bowler_name, non_striker_name = (
-                            delivery_data.get("batter", ""),
-                            delivery_data.get("bowler", ""),
-                            delivery_data.get("non_striker", "")
-                        )
-                        batter_runs, extras_runs, total_runs = (
-                            delivery_data.get("runs", {}).get("batter", 0),
-                            delivery_data.get("runs", {}).get("extras", 0),
-                            delivery_data.get("runs", {}).get("total", 0)
-                        )
 
-                        # Update player scores
-                        player_scores[peoples[batter_name]]["runs"] += batter_runs
-                        player_scores[peoples[bowler_name]]["runs_taken"] += total_runs
+                # Update the match with inference data
+                match.inference_row = json.dumps(inference_list, cls=DjangoJSONEncoder)
+                match.save()
 
-                        if('wicket' in delivery_data):
-                            player_scores[peoples[batter_name]]["wickets"] += 1
-                            player_scores[peoples[delivery_data["wicket"]["player_out"]]]["not_out"] = False
-                            
-                            if(delivery_data["kind"] == "caught"):
-                                for fielder in delivery_data["wicket"]["fielders"]:
-                                    player_scores[peoples[fielder["name"]]]["catches"] += 1
-                            elif(delivery_data["kind"] == "stumped"):
-                                for fielder in delivery_data["wicket"]["fielders"]:
-                                    player_scores[peoples[fielder["name"]]]["stumpings"] += 1
+                self.stdout.write(self.style.SUCCESS(f'Created match: {match} with inference data'))
+                
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"Error updating inference row: {e}"))
 
-                        if(not (delivery_data.get("extras", None) and (delivery_data.wides  or delivery_data.noballs))):
-                            player_scores[peoples[batter_name]]["balls_played"] += 1
-                            player_scores[peoples[bowler_name]]["balls_delivered"] += 1
+    def generate_random_city(self):
+        cities = [
+            'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 
+            'Kolkata', 'Ahmedabad', 'Pune', 'Jaipur', 'Lucknow'
+        ]
+        return random.choice(cities)
 
-                        
-
-                        if batter_name not in player_cache:
-                            player_cache[batter_name] = Player.objects.filter(name=batter_name).first()
-                        if bowler_name not in player_cache:
-                            player_cache[bowler_name] = Player.objects.filter(name=bowler_name).first()
-                        if non_striker_name not in player_cache:
-                            player_cache[non_striker_name] = Player.objects.filter(name=non_striker_name).first()
-
-                        delivery = Delivery(
-                            over=over,
-                            batter=player_cache[batter_name],
-                            bowler=player_cache[bowler_name],
-                            non_striker=player_cache[non_striker_name],
-                            batter_runs=delivery_data.get("runs", {}).get("batter", 0),
-                            extras_runs=delivery_data.get("runs", {}).get("extras", 0),
-                            total_runs=delivery_data.get("runs", {}).get("total", 0)
-                        )
-                        deliveries.append(delivery)
-
-                        # Extras
-                        extras_data = delivery_data.get("extras", {})
-                        if extras_data:
-                            extra = Extra(
-                                delivery=delivery,
-                                wides=extras_data.get("wides"),
-                                legbyes=extras_data.get("legbyes")
-                            )
-                            extras.append(extra)
-
-                        # Wicket
-                        if 'wicket' in delivery_data:
-                            wicket_data = delivery_data["wicket"]
-                            fielder_name = wicket_data.get("fielders", [None])[0]
-                            if fielder_name not in player_cache:
-                                player_cache[fielder_name] = Player.objects.filter(name=fielder_name).first() if fielder_name else None
-                            wicket = Wicket(
-                                delivery=delivery,
-                                kind=wicket_data.get("kind", ""),
-                                player_out=wicket_data.get("player_out", ""),
-                                fielder=player_cache[fielder_name]
-                            )
-                            wickets.append(wicket)
-                tqdm.write(self.style.SUCCESS(f'Inning and overs for team {inning_data.get("team", "")} created'))
-
-            Inning.objects.bulk_create(innings)
-            Over.objects.bulk_create(overs)
-            Delivery.objects.bulk_create(deliveries)
-            Extra.objects.bulk_create(extras)
-            Wicket.objects.bulk_create(wickets)
-
-            # Powerplays
-            powerplays = []
-            for inning_data in data.get("innings", []):
-                for pp_data in inning_data.get("powerplays", []):
-                    powerplay = Powerplay(
-                        match_info=match_info,
-                        from_over=pp_data.get("from", 0),
-                        to=pp_data.get("to", 0),
-                        powerplay_type=pp_data.get("type", "")
-                    )
-                    powerplays.append(powerplay)
-            Powerplay.objects.bulk_create(powerplays)
-
-            tqdm.write(self.style.SUCCESS('Powerplays created'))
-
-        except Exception as e:
-            logging.error(f'Failed to create match data: {e}')
-            tqdm.write(self.style.ERROR('Failed to create match data'))
+    def generate_random_date(self):
+        # Generate a random date within the last 2 years
+        days_back = random.randint(0, 730)
+        return timezone.now().date() - timezone.timedelta(days=days_back)

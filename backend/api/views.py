@@ -1,11 +1,11 @@
 from rest_framework import generics
-from .serializers import MatchSerializer, ChatSerializer, MessageSerializer,PlayerSerializer, TeamSerializer,MatchPostSerializer
+from .serializers import MatchSerializer, ChatSerializer, MessageSerializer,PlayerSerializer,MatchPostSerializer
 from .models import MatchInfo, Chat, Message, Player, Team
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from datetime import datetime
-from rest_framework import status
+from rest_framework import status,serializers
 import pandas as pd
 from datetime import datetime
 import cricketstats as cks
@@ -19,12 +19,16 @@ from .inference import get_response
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from .inference import get_response 
+from rest_framework.pagination import LimitOffsetPagination
 
+class InfiniteScrollPagination(LimitOffsetPagination):
+    default_limit = 10  # Number of players per request
+    
 
 class MatchList(generics.ListCreateAPIView):
     serializer_class = MatchSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['team_a', 'team_b', 'city', 'date', 'venue', 'match_type', 'season', 'date', 'gender', 'season','id']
+    filterset_fields = ['team_a', 'team_b', 'city', 'match_type', 'date','id']
     ordering_fields = ['date']
     ordering = ['date']
 
@@ -263,39 +267,32 @@ class PredictPlayers(APIView):
 class GetAllPlayers(generics.ListAPIView):
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
-
-class GetAllTeams(generics.ListAPIView):
-    queryset = Team.objects.all()
-    serializer_class = TeamSerializer
+    pagination_class = InfiniteScrollPagination
 
 class MatchCreateAPIView(generics.CreateAPIView):
     queryset = MatchInfo.objects.all()
     serializer_class = MatchPostSerializer
 
     def perform_create(self, serializer):
-        """
-        Override perform_create to handle ManyToMany relationships
-        and update inference_row during instance creation.
-        """
-        # Save the instance to get the ID for ManyToMany relationships
+        # Save the instance, which also handles player relationships
         instance = serializer.save()
-        
+
+        # Fetch player names for inference
+        team_a_player_names = list(instance.team_a_players.values_list('name', flat=True))
+        team_b_player_names = list(instance.team_b_players.values_list('name', flat=True))
+
         try:
-            # Fetch related players after saving (ManyToMany fields require instance.id)
-            # team_a_players_ids = list(instance.team_a_players.values_list('identifier', flat=True))
-            team_a_players = list(instance.team_a_players.values_list('unique_name', flat=True))
-            # team_b_players_ids = list(instance.team_b_players.values_list('identifier', flat=True))
-            team_b_players = list(instance.team_b_players.values_list('unique_name', flat=True))
-            
-            # inference_list = get_response(team_a_players,team_b_players,team_a_players_ids,team_b_players_ids, instance.match_type, instance.date)
-            
-            inference_list = get_response(team_a_players,team_b_players,instance.match_type, instance.date)
- 
-            print(inference_list)
-            # Update inference_row for the instance
-            MatchInfo.objects.filter(pk=instance.pk).update(
-                inference_row=json.dumps(inference_list, cls=DjangoJSONEncoder)
+            # Call inference function
+            inference_list = get_response(
+                team_a_player_names,
+                team_b_player_names,
+                instance.match_type,
+                instance.date
             )
+
+            # Update inference_row
+            instance.inference_row = json.dumps(inference_list, cls=DjangoJSONEncoder)
+            instance.save()
         except Exception as e:
             print(f"Error updating inference_row in API call: {e}")
-
+            raise serializers.ValidationError("Failed to update inference_row.")
