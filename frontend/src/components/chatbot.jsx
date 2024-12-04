@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   MessageCircle,
 } from "lucide-react"
+import AudioBar from '@/components/ui/audio'
 import { webSocketConnection } from "@/lib/websockets"
 import { TypeAnimation } from 'react-type-animation'
 import { getMatchRelatedChats } from "@/api"
@@ -142,14 +143,15 @@ export default function Dream11AIChat({ match_id }) {
                   <Trophy className="w-5 h-5 text-white" />
                 </div>
               )}
-              <div
-                className={`rounded-lg p-4 max-w-[80%] ${message.isUser
-                  ? "bg-[#e53935] text-white"
-                  : "bg-gray-800 text-white"
-                  }`}
-              >
-                <div className="text-sm">
+                <div
+                    className={`rounded-lg p-4 relative max-w-[80%] ${message.isUser
+                    ? "bg-[#e53935] text-white"
+                    : "bg-gray-800 text-white"
+                    }`}
+                >
+                <div className="text-sm break-all">
                   {message.text}
+                  <AudioBar text={message.text}/>
                 </div>
               </div>
               {message.isUser && (
@@ -200,4 +202,3 @@ export default function Dream11AIChat({ match_id }) {
     </div>
   )
 }
-
