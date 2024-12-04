@@ -75,7 +75,7 @@ export default function TeamSelectionForm() {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:8000/backend/api/v1/players/?limit=${PLAYERS_PER_PAGE}&offset=${
+          `http://172.16.4.2:8080/backend/api/v1/players/?limit=${PLAYERS_PER_PAGE}&offset=${
             (page - 1) * PLAYERS_PER_PAGE
           }`
         );
@@ -270,7 +270,7 @@ export default function TeamSelectionForm() {
     try {
       setIsLoading(true);
       const response = await axios.post(
-        "http://localhost:8000/backend/api/v1/add-match/",
+        "http://172.16.4.2:8080/backend/api/v1/add-match/",
         submissionData
       );
       toast({
