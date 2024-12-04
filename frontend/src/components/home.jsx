@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trophy, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { BirdIcon as Cricket, Trophy, Users } from "lucide-react";
+import { Icon } from "lucide-react";
+import { cricketBall } from "@lucide/lab";
 import Link from "next/link";
 import "@/app/css/welcome.css";
 
@@ -45,38 +49,74 @@ export function ShowComponents({ matches }) {
             UPCOMING CRICKET MATCHES
           </h1>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 justify-items-center">
             {matches &&
               matches.map((match) => (
                 <Card
+                  className="w-full max-w-md overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out hover:scale-[1.02]"
                   key={match.id}
-                  className="bg-white/90 backdrop-blur-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:scale-105"
                 >
-                  <CardContent className="p-4">
-                    <h3 className="mb-3 text-center text-lg font-semibold text-gray-800">
-                      {`${match.team_a} vs ${match.team_b}`}
-                    </h3>
-                    <div className="mb-3 flex items-center justify-between text-sm">
-                      <span className="font-medium">{match.team_a}</span>
-                      <span className="rounded-full bg-red-100 px-3 py-1 text-red-600 font-semibold">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold text-gray-800">
+                        {match.team_a} vs {match.team_b}
+                      </h3>
+                      <Badge
+                        variant="secondary"
+                        className="bg-blue-100 text-blue-700"
+                      >
                         {match.date}
-                      </span>
-                      <span className="font-medium">{match.team_b}</span>
+                      </Badge>
                     </div>
-                    <div className="mb-3 flex justify-between text-center">
-                      <div>
+
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-white rounded-full shadow-inner flex items-center justify-center mb-2">
+                          <Icon iconNode={cricketBall} />
+                        </div>
+                        <p className="text-sm font-medium text-gray-700">
+                          {match.team_a}
+                        </p>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-800">VS</div>
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-white rounded-full shadow-inner flex items-center justify-center mb-2">
+                          <Icon iconNode={cricketBall} />
+                        </div>
+                        <p className="text-sm font-medium text-gray-700">
+                          {match.team_b}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between mb-6">
+                      <div className="text-center">
+                        <Trophy className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
                         <p className="text-xs text-gray-600">Prize Pool</p>
-                        <p className="text-sm font-bold">{match.prize_pool}</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {match.prize_pool}
+                        </p>
                       </div>
-                      <div>
+                      <div className="text-center">
+                        <Trophy className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
                         <p className="text-xs text-gray-600">1st Prize</p>
-                        <p className="text-sm font-bold">{match.first_prize}</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {match.first_prize}
+                        </p>
                       </div>
                     </div>
-                    <div className="mb-3 flex justify-between text-xs text-gray-600">
-                      <span>{match.teama_spots_left} spots left</span>
-                      <span>{match.teamb_spots_left} spots</span>
+
+                    <div className="flex justify-between mb-4 text-xs text-gray-600">
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-1 text-green-600" />
+                        <span>{match.teama_spots_left} spots left</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 mr-1 text-blue-600" />
+                        <span>{match.teamb_spots_left} spots left</span>
+                      </div>
                     </div>
+
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs text-gray-600">Join for</p>
@@ -84,13 +124,13 @@ export function ShowComponents({ matches }) {
                           <span className="text-xs text-gray-400 line-through">
                             ₹49
                           </span>{" "}
-                          <span className="text-sm font-bold">
+                          <span className="text-lg font-bold text-gray-800">
                             ₹{match.amount_to_be_paid}
                           </span>
                         </p>
                       </div>
-                      <Link href={`/EachMatch/${match.id}`}>
-                        <Button className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 transition-all duration-300 ease-in-out hover:shadow-md active:scale-95">
+                      <Link href="EachMatch/${match.id}}">
+                        <Button className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-semibold px-6 py-2 rounded-full transition-all duration-300 ease-in-out hover:shadow-lg active:scale-95">
                           JOIN NOW
                         </Button>
                       </Link>
