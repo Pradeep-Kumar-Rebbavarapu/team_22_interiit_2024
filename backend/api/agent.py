@@ -44,7 +44,6 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         Example: If the user says, "Runs of someone" then matchtype should be ["total_runs"]. If the user says, "wickets by someone against someone else", columns should be ["wickets"]. If the user says, "someone's wickets and balls from someone else", columns should be ["wickets","balls"]. Default = ["runs", "wickets", "balls"]
 
     Note that if two players are mentioned, matchtype is empty. Only columns should be present. If only one player exists, then column might not be empty. If both are explicitly mentioned, prefer matchtype over columns.
-    If there is only a single player and no matchtype is mentioned - Default: ['international_ODI_lifetime_runs', 'international_Test_lifetime_runs', 'international_T20_lifetime_runs', 'international_ODI_lifetime_wickets', 'international_Test_lifetime_wickets', 'international_T20_lifetime_wickets']    
     If user only told 'odi lifetime runs' without mentioning international or club, then Default: ['international_ODI_lifetime_runs', 'club_ODI_lifetime_runs']
     If user only told 't20 lifetime wickets' without mentioning international or club, then Default: ['international_ODI_lifetime_wickets', 'club_ODI_lifetime_wickets']
     If user asks for 'runs' or 'wickets' without mentioning anything else, then Default: Matchtype = ['total_runs'] or ['total_wickets']
@@ -93,7 +92,8 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         - matchresult=None  # Search matches where players or teams have these results. When looking at players, this option **must** be used with at one team in playersteams variable. Options either "won" or "loss" or "draw" or "tie" eg. matchresult="won"
         - sumstats=False    # When switched to True, it adds an "all players" or "all teams" row at end of result that sums all players or teams stats that are searched for. Default - False. MAKE SURE THE FIRST LETTER IS CAPITAL. True and False are correct. true or falSE or FALSE are incorrect.
 
-
+    Examples: 'runs of player1 against player2' implies oppositionbowler is player2. 'wickets of player1 against player2' implies oppositionbatsman is player2. (Notice how runs and wickets reverse the roles in opposition)
+        
     Return a JSON containing all the required arguments and optional arguments as specified by the user:
 
     Output JSON Example:
@@ -197,7 +197,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         except Exception as e:
             raise ValueError(f"Error in calculation: {str(e)}")
         
-    def fetchDataStats(input_query, message: str) -> str:
+    def fetchDataStats(input_query, message: str, query, response_format) -> str:
         print("DataStats Called")
         print(input_query, type(input_query))
 
@@ -291,7 +291,6 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                     else:
                         data.append([f"{players_name[0]} faced the bowler {players_name[1]}", column, (past_data["played_against"][players_name[1]]["runs"] * 100)/ past_data["played_against"][players[1]]["balls"]])
         elif len(players) == 2:
-            # player_data = open(f'../data/players/players/{players[1]}.json', 'r')
             player_data = open(os.path.join(BASE_DIR,f'./data/players/players/{players[1]}.json'), 'r')
             data_stream = player_data.read()
             print(len(data_stream))
@@ -312,6 +311,10 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                             data.append([f"{players_name[1]} faced the bowler {players_name[0]}", column, past_data["played_against"][players[0]]["runs"] / past_data["played_against"][players[1]]["balls"]])
 
         print("Daaata", data)
+
+        if len(data) == 0 and len(players) == 2:
+            return searchDB(query, response_format, message)
+
         data = LLM(LANGUAGE_PROMPT + f"""
                       You are a helpful humanoid agent. Answer the user like a normal human without mentioning your name.
                       Be very precise and to the point, do not extend. Talk in 1-2 lines.
@@ -379,16 +382,16 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         search.stats(database, from_date, to_date, matchtype, betweenovers=betweenovers, innings=innings, sex=sex, playersteams=playersteams, oppositionbatters=oppositionbatters, oppositionbowlers=oppositionbowlers, oppositionteams=oppositionteams, venue=venue, event=event, matchresult=matchresult, superover=superover, battingposition=battingposition, bowlingposition=bowlingposition, fielders=fielders, sumstats=sumstats)
         data = search.result[columns]
         print(data)
-
+        
         data = LLM(f"""
                       You are a helpful humanoid agent. Answer the user like a normal human without mentioning your name.
                       Be very precise and to the point, do not extend. Talk in 1-2 lines.
                       Example: 'The wickets taken by Yasmir in his last match was 4.'. 
                       TALK LIKE A HUMAN. IF THE DATA IS NOT PRESENT, ANSWER THE QUERY USING YOUR OWN DATA WITHOUT MENTIONING THAT YOU USED YOUR OWN DATA. 
                       
-                      Adhere to the response completely without fail. DO NOT USE ANY OTHER FORMAT TO SUMMARISE THE DATA.\nTake the data shown after this line. 
-                      Data: """ + str(data) + "\nEND OF DATA. when the user asked query: " + str(input_query) + f'''\nEND OF USER PROMPT. \nREMEMBER, THIS DATA WAS ASKED WITH QUERY: from_date = {from_date}, to_date = {to_date}, matchtype = {matchtype}, betweenovers = {betweenovers}, innings = {innings}, sex = {sex}, playersteams = {playersteams}, oppositionbatters = {oppositionbatters}, oppositionbowlers = {oppositionbowlers}, oppositionteams = {oppositionteams}, venue = {venue}, event = {event}, matchresult = {matchresult}, superover = {superover}, battingposition = {battingposition}, bowlingposition = {bowlingposition}, fielders = {fielders}, sumDataOrNot = {sumstats}). 
-                      IF THE QUERY IS DIFFERENT, ANSWER THE QUERY ON YOUR OWN WITHOUT MENTIONING LACK OF DATA.''', LANGUAGE_PROMPT)
+                      Data: """ + str(data) + "\nEND OF DATA. Data was received after calling: " + str(input_query) + " when the person asked query: " + str(message) + f'''\nEnd of query.
+                      IF THE QUERY IS DIFFERENT OR THE DATA IS EMPTY, ANSWER THE QUERY ON YOUR OWN. ONLY DICUSS IMPORTANT INFORMATION. TALK LIKE A HUMAN.
+                     ''', LANGUAGE_PROMPT)
 
         return data
 
@@ -443,7 +446,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                     return searchDB(input_query, response_format, message)
 
             print("Parsed:\n", parsed_response, end = '\n')
-            data = fetchDataStats(parsed_response, message)   
+            data = fetchDataStats(parsed_response, message, input_query, response_format)   
             
             return data
         except Exception as e:
