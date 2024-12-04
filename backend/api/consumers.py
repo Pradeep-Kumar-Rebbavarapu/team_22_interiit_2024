@@ -56,6 +56,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             data = json.loads(text_data)
             message = data.get("message", "")
             match_id = data.get("match_id", "")
+            language = data.get("language", "")
 
             # Save user message
             await self.save_user_message(match_id, message)
@@ -64,7 +65,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             all_players = await self.get_match_players(match_id)
             print(all_players)
             # Send message to LLM and get response
-            llm_response = await self.run_agent_ai(message, all_players)
+            llm_response = await self.run_agent_ai(message, all_players, language)
 
             # Save AI response
             await self.save_ai_response(match_id, str(llm_response))
@@ -82,8 +83,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }))
 
     @database_sync_to_async
-    def run_agent_ai(self, message, all_players):
+    def run_agent_ai(self, message, all_players, language):
         # Wrap the synchronous agentAI function 
-        return get_response(message, all_players)
+        return get_response(message, all_players, language)
 
 # Serializer and List View remain the same as in the previous example
