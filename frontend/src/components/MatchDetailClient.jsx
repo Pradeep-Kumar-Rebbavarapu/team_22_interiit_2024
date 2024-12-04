@@ -1,10 +1,21 @@
-'use client'
+"use client";
 
-import React, { useState } from "react";
-import { ArrowLeft, Info, Minus, ChevronRight, Trophy, ChevronDown, ChevronUp, Loader2, User } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  Info,
+  Minus,
+  ChevronRight,
+  Trophy,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { set } from "date-fns";
 
 const PlayerCard = ({
   player,
@@ -73,7 +84,7 @@ const PlayerCard = ({
   );
 };
 
-const MatchDetailClient = ({ matchData, current_year }) => {
+const MatchDetailClient = ({ matchData, current_year, optimal = false }) => {
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [activeTab, setActiveTab] = useState("batters");
   const [showPredictedPlayers, setShowPredictedPlayers] = useState(false);
@@ -84,6 +95,37 @@ const MatchDetailClient = ({ matchData, current_year }) => {
   const playersTeamA = matchData.team_a_players;
   const playersTeamB = matchData.team_b_players;
   const players = [...playersTeamA, ...playersTeamB];
+
+  const setPrediction = async () => {
+    const response = await fetch(
+      "http://localhost:8000/backend/api/v1/predict-players/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          match_id: matchData.id,
+          selected_players_id: selectedPlayers,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to predict players");
+    }
+
+    const data = await response.json();
+    setPredictedPlayers(data.predicted_players);
+  };
+
+  useEffect(() => {
+    if (optimal) {
+      setPrediction();
+      setShowPredictedPlayers(true);
+      handlePredictPlayers();
+    }
+  }, []);
 
   const togglePlayer = (playerId) => {
     setSelectedPlayers((prev) =>
@@ -122,23 +164,7 @@ const MatchDetailClient = ({ matchData, current_year }) => {
     setShowPredictedPlayers(true);
     setIsPredictedSectionOpen(true);
     try {
-      const response = await fetch('http://localhost:8000/backend/api/v1/predict-players/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          match_id: matchData.id,
-          selected_players_id: selectedPlayers,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to predict players');
-      }
-
-      const data = await response.json();
-      setPredictedPlayers(data.predicted_players);
+      setPrediction();
     } catch (error) {
       console.error("Failed to predict players:", error);
     } finally {
@@ -191,7 +217,7 @@ const MatchDetailClient = ({ matchData, current_year }) => {
         <div className="flex justify-center items-center gap-4 sm:gap-8 mb-3 sm:mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-600 flex items-center justify-center text-xs sm:text-sm">
-              {matchData.team_a.slice(0,3) }
+              {matchData.team_a.slice(0, 3)}
             </div>
             <span className="text-xl sm:text-2xl font-bold">
               {selectedTeamCounts.team_a}
@@ -199,7 +225,7 @@ const MatchDetailClient = ({ matchData, current_year }) => {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex items-center justify-center text-xs sm:text-sm">
-              {matchData.team_b.slice(0,3)}
+              {matchData.team_b.slice(0, 3)}
             </div>
             <span className="text-xl sm:text-2xl font-bold">
               {selectedTeamCounts.team_b}
@@ -333,4 +359,3 @@ const MatchDetailClient = ({ matchData, current_year }) => {
 };
 
 export default MatchDetailClient;
-
