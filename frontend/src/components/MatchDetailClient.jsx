@@ -98,7 +98,7 @@ const MatchDetailClient = ({ matchData, current_year, optimal = false }) => {
 
   const setPrediction = async () => {
     const response = await fetch(
-      "http://localhost:8000/backend/api/v1/predict-players/",
+      "http://172.16.4.2:8080/backend/api/v1/predict-players/",
       {
         method: "POST",
         headers: {
