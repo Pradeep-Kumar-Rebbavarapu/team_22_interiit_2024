@@ -31,9 +31,10 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
   
     # PROMPTS
     LANGUAGE_PROMPT = f'''Only give the final output in language: {language}. 
-        If language is "Hindi" or "हिन्दी", output in Devanagiri Script
-        If language is "English", output in Latin Script
-        Continue with the work:'''
+        If language is "हिन्दी", output in Devanagiri Script ONLY
+        If language is "English", output in Latin Script ONLY
+        Continue with the work:
+        '''
 
     QUICK_PROMPT = f'''
     Required Arguments which must be in the final output JSON (Or empty array):
@@ -114,8 +115,8 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
     You are a knowledgeable assistant that can handle various types of queries. Keep your context only to CRICKET. You have access to data from June 2019 to November 2024. Analyze the user's query and determine the best way to respond. Follow these steps:
 
     1. First determine what type of information is needed:
-    - Database Query (SearchDB): For all factual information stored in the database for all other complex queries. Use when two or more players are involved or anything apart from wickets, runs, overs or balls is asked. Example = 1. Runs with win percentage and strike rate of Hardik, 2. How is Kohli against leg spinners?
-    - Database Query (QuickDB): For extremely fast information of player Head to Head against scenarios. Prefer if the data is available here. Contains runs taken in total, total wickets, total balls played, strike rate, balls played (Balls faced as a batsman), economy, total runs taken, total wickets taken, thirties, fifties, centuries, maidens, hattricks of each player. Also contains runs, overs, balls data of previous 3 matches (international or club) and lifetime matches only for each match format. Also contains head to head data mapped between two players. Examples: 1. runs of Sam against Ethen, 2. total runs or wickets in test cricket of last 3 matches of Aman. 3. centuries scored by SC Tejmukh. 4. fifties and total runs taken by Siraj. 5. maidens or thirties or hattricks taken by U Mamb. 6. total international test runs of Gur Mul.
+    - Database Query (SearchDB): For all factual information stored in the database for all other complex queries. Use when two or more players are involved or anything apart from wickets, runs, overs or balls is asked. Example = 1. Runs with win percentage and strike rate of Hardik, 2. How is Kohli against leg spinners? ALWAYS use over QuickDB if the same data of both players is to be fetched. Example: 1. runs of Erwin and Qasim. Then USE SearchDB.
+    - Database Query (QuickDB): For extremely fast information of player Head to Head against scenarios. Head to Head 2 player data or 1 player only runs/wickets/fifties/hattricks and so on. DO NOT use if same data or comparison is being requested for two or more players. It can only give data of one player at a time. Prefer if the data is available here. Contains runs taken in total, total wickets, total balls played, strike rate, balls played (Balls faced as a batsman), economy, total runs taken, total wickets taken, thirties, fifties, centuries, maidens, hattricks of each player. Also contains runs, overs, balls data of previous 3 matches (international or club) and lifetime matches only for each match format. Also contains head to head data mapped between two players. Examples: 1. runs of Sam against Ethen, 2. total runs or wickets in test cricket of last 3 matches of Aman. 3. centuries scored by SC Tejmukh. 4. fifties and total runs taken by Siraj. 5. maidens or thirties or hattricks taken by U Mamb. 6. total international test runs of Gur Mul. If two or more players are mentioned and they are not against each other, USE SearchDB. Example: 1. 'Runs or Wickets of Remmo and Aditya' should be chosen for SearchDB. 2. 'Remmo vs (or against) Aditya' should be chosen for QuickDB.
     - Calculation (Calculator): For mathematical operations
     - Direct Response: For general knowledge or logical reasoning
 
@@ -311,7 +312,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                             data.append([f"{players_name[1]} faced the bowler {players_name[0]}", column, past_data["played_against"][players[0]]["runs"] / past_data["played_against"][players[1]]["balls"]])
 
         print("Daaata", data)
-        data = gemini(LANGUAGE_PROMPT + f"""
+        data = LLM(LANGUAGE_PROMPT + f"""
                       You are a helpful humanoid agent. Answer the user like a normal human without mentioning your name.
                       Be very precise and to the point, do not extend. Talk in 1-2 lines.
                       Example: 'The wickets taken by Pandya in his last match was 4.'. 
@@ -379,21 +380,19 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         data = search.result[columns]
         print(data)
 
-        data = gemini(f"""
+        data = LLM(f"""
                       You are a helpful humanoid agent. Answer the user like a normal human without mentioning your name.
                       Be very precise and to the point, do not extend. Talk in 1-2 lines.
-                      Example: 'The wickets taken by Pandya in his last match was 4.'. 
-                      TALK LIKE A HUMAN. IF THE DATA IS NOT PRESENT OR SILLY, ANSWER THE QUERY USING YOUR OWN DATA. 
-                      Fill the query as per the response format for the user's query is given at the bottom.
+                      Example: 'The wickets taken by Yasmir in his last match was 4.'. 
+                      TALK LIKE A HUMAN. IF THE DATA IS NOT PRESENT, ANSWER THE QUERY USING YOUR OWN DATA WITHOUT MENTIONING THAT YOU USED YOUR OWN DATA. 
                       
-                      Adhere to the response format completely without fail. DO NOT USE ANY OTHER FORMAT TO SUMMARISE THE DATA.\nTake the data shown after this line. 
+                      Adhere to the response completely without fail. DO NOT USE ANY OTHER FORMAT TO SUMMARISE THE DATA.\nTake the data shown after this line. 
                       Data: """ + str(data) + "\nEND OF DATA. when the user asked query: " + str(input_query) + f'''\nEND OF USER PROMPT. \nREMEMBER, THIS DATA WAS ASKED WITH QUERY: from_date = {from_date}, to_date = {to_date}, matchtype = {matchtype}, betweenovers = {betweenovers}, innings = {innings}, sex = {sex}, playersteams = {playersteams}, oppositionbatters = {oppositionbatters}, oppositionbowlers = {oppositionbowlers}, oppositionteams = {oppositionteams}, venue = {venue}, event = {event}, matchresult = {matchresult}, superover = {superover}, battingposition = {battingposition}, bowlingposition = {bowlingposition}, fielders = {fielders}, sumDataOrNot = {sumstats}). 
-                      CONFIRM IF THE OUTPUT DATA MATCHES THE QUERY USING COMMON SENSE BEFORE SHOWING OUTPUT. 
                       IF THE QUERY IS DIFFERENT, ANSWER THE QUERY ON YOUR OWN WITHOUT MENTIONING LACK OF DATA.''', LANGUAGE_PROMPT)
 
         return data
 
-    def gemini(input_query: str, system_prompt:str = ""):
+    def LLM(input_query: str, system_prompt:str = ""):
         print("LLM Called!", end = '\n')
         chat_completion = client.chat.completions.create(
             messages=[
@@ -422,7 +421,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         try:
             print(type(input_query))
             print(input_query)
-            query = gemini('''Create me an exact JSON query as a string for the prompt given at the end. Follow these rules strictly:
+            query = LLM('''Create me an exact JSON query as a string for the prompt given at the end. Follow these rules strictly:
 
     1. ONLY use the fields explicitly listed below
     2. Do NOT reference any fields that are not listed here
@@ -464,7 +463,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         try:
             print(type(input_query))
             print(input_query)
-            query = gemini('''Create me an exact JSON query as a string for the prompt given at the end. Follow these rules strictly:
+            query = LLM('''Create me an exact JSON query as a string for the prompt given at the end. Follow these rules strictly:
 
     1. ONLY use the fields explicitly listed below
     2. Do NOT reference any fields that are not listed here
@@ -488,7 +487,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                     print("Cleaned!")
                     print("Parsing Failed!", e)
                     print(cleaned_query)
-                    return gemini('''
+                    return LLM('''
                         You are a helpful humanoid agent. Answer the user like a normal human without mentioning your name.
                         Be very precise and to the point, do not extend. Talk in 1-2 lines.
                         Example: 'The wickets taken by Pandya in his last match was 4.'. 
@@ -504,7 +503,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
             try:
                 print("Recalling!", end = '\n')
                 print(query)
-                query = gemini('''DON'T KEEP ANY TEXT, ONLY GIVE ME THE JSON ITSELF. Examples: 
+                query = LLM('''DON'T KEEP ANY TEXT, ONLY GIVE ME THE JSON ITSELF. Examples: 
                                 {
                                     players: "Sarfaraz Ahmed",
                                     database: "./all_json.zip",
@@ -548,7 +547,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                 return data
             
             except Exception as e2:
-                return gemini(f'''Use your own knowledge to answer the user's query:
+                return LLM(f'''Use your own knowledge to answer the user's query:
                                     input_query: {input_query}
                                     response_format: {response_format}
                                     message: {message}
@@ -557,7 +556,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                               ''')
 
     try:
-        response = gemini(AGENT_PROMPT + message, system_prompt='''
+        response = LLM(AGENT_PROMPT + message, system_prompt='''
     1. ONLY use format of JSON = { "Thought": "(thought)", "Action": "(action)", "Response Format": "(response_format)" }
     2. Do NOT reference any other format not listed here
     3. Do NOT include ```json, ```, or ```***``` any other markdown/code formatting
@@ -583,7 +582,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
             elif action == "QuickDB":
                 result = quickDB(action_input, response_format, message)
             elif action == 'DirectResponse':
-                result = gemini(DIRECT_PROMPT + response_format + "\nand this is what the user initially asked: \n"+ message, system_prompt=LANGUAGE_PROMPT)
+                result = LLM(DIRECT_PROMPT + response_format + "\nand this is what the user initially asked: \n"+ message, system_prompt=LANGUAGE_PROMPT)
             else:
                 return "I don't understand the question. Please try rephrasing it."
         except:
