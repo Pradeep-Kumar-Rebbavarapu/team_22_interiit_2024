@@ -34,7 +34,7 @@ if not DEBUG:
     HOST_URL = env('HOST_URL')
     if HOST_URL:
         ALLOWED_HOSTS.append(HOST_URL)
-        CSRF_TRUSTED_ORIGINS = [f"http://{HOST_URL}","http://127.0.0.1:8000","http://localhost:8000","http://172.16.4.2:8080","http://dreams11.site:8080/"]
+        CSRF_TRUSTED_ORIGINS = [f"http://{HOST_URL}","http://127.0.0.1:8000","http://localhost:8000","http://172.16.4.2:8080","http://dreams11.site:8080",]
     else:
         raise ImproperlyConfigured("HOST_URL environment variable is not set")
 else:
