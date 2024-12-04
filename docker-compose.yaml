@@ -49,6 +49,7 @@ services:
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
+      - ./nginx/ssl-certs:/etc/letsencrypt/live/team4.iiticharak.com
     networks:
       - app-network
 
