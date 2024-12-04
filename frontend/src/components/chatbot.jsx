@@ -49,6 +49,7 @@ export default function Dream11AIChat({ match_id }) {
   const [input, setInput] = useState("")
   const [chatHistory, setChatHistory] = useState([])
   const [isTyping, setIsTyping] = useState(false)
+  const [language, setLanguage] = useState("English")
   const messagesEndRef = useRef(null)
 
   const addMessage = (message) => {
@@ -75,7 +76,8 @@ export default function Dream11AIChat({ match_id }) {
       }
       setChatHistory((prev) => [...prev, userMessage])
       setIsTyping(true)
-      webSocketConnection.sendMessage(userMessage.text, match_id)
+      console.log(userMessage.text, match_id, language)
+      webSocketConnection.sendMessage(userMessage.text, match_id, language)
       setInput("")
     }
   }
@@ -127,7 +129,23 @@ export default function Dream11AIChat({ match_id }) {
         >
           <ChevronLeft className="w-5 h-5" />
         </Button>
-        <span className="text-sm font-medium">Dream11 AI Chat</span>
+        <div className="flex justify-between w-full">
+          <Button className="!bg-transparent !shadow-none !select-none !cursor-default text-sm font-medium">Dream11 AI Chat</Button>
+          <div className="flex">
+            <Button
+              className={`text-sm font-medium ${language === 'English' ? 'bg-gradient-to-r from-red-500 to-red-700 text-white' : ''} mr-5`}
+              onClick={() => setLanguage('English')}
+            >
+              English
+            </Button>
+            <Button
+              className={`text-sm font-medium ${language === 'हिन्दी' ? 'bg-gradient-to-r from-red-500 to-red-700 text-white' : ''}`}
+              onClick={() => setLanguage('हिन्दी')}
+            >
+              हिन्दी
+            </Button>
+          </div>
+        </div>
       </header>
 
       <ScrollArea className="flex-1 p-4">
@@ -151,7 +169,9 @@ export default function Dream11AIChat({ match_id }) {
                 >
                 <div className="text-sm break-all">
                   {message.text}
-                  <AudioBar text={message.text}/>
+                  {!message.isUser && 
+                    <AudioBar text={message.text}/>
+                  }
                 </div>
               </div>
               {message.isUser && (

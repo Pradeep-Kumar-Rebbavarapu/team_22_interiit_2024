@@ -3,7 +3,7 @@ import MatchDetailClient from "@/components/MatchDetailClient";
 import Dream11AIChat from "@/components/chatbot";
 
 export default async function Page({ params }) {
-  const {id} = await params;
+  const { id } = await params;
   const matchData = await getMatches({id:id})
 
   return (

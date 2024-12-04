@@ -2,7 +2,7 @@
 import { getMatches } from '@/api'
 import EachMatchCard from '@/components/EachMatchCard'
 export default async function Page({params}) {
-  const id = params.id
+  const { id } = await params
   const match = await getMatches({id:id})
 
   return (

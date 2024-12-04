@@ -26,7 +26,7 @@ if module_path not in sys.path:
 
 parser = Parser()
 
-def agentAI(message: str, all_players_id: list, all_players: list, all_players_variations: list) -> str:
+def agentAI(message: str, all_players_id: list, all_players: list, all_players_variations: list, language: str) -> str:
     """Main function to process queries and return return response"""
   
     # PROMPTS
@@ -39,7 +39,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
     Required Arguments which must be in the final output JSON (Or empty array):
         - players = ""    # One or two players specified by user. FORMAT: ["Player whose performance is being checked", "Against whom is it being checked"]. For example (DO NOT USE THE NAMES PROVIDED IN THE EXAMPLES). - If V Kohli plays against HH Pandya, write ['V Kohli', 'HH Pandya']. Options to choose from = ''' + str(all_players) + '''. If the players user mentioned do not lie in the Options, then use the first player name.
         - matchtype = Options = ['total_runs', 'total_wickets', 'fifties', 'thirties', 'centuries', 'maidens', 'hattricks', 'balls', 'economy', 'club_ODI_previous3_runs', 'club_ODI_previous3_wickets', 'club_ODI_previous3_balls played', 'club_ODI_previous3_overs', 'club_ODI_previous3_runs gave', 'club_ODI_lifetime_runs', 'club_ODI_lifetime_wickets', 'club_ODI_lifetime_balls played', 'club_ODI_lifetime_overs', 'club_ODI_lifetime_runs gave', 'club_Test_previous3_runs', 'club_Test_previous3_wickets', 'club_Test_previous3_balls played', 'club_Test_previous3_overs', 'club_Test_previous3_runs gave', 'club_Test_lifetime_runs', 'club_Test_lifetime_wickets', 'club_Test_lifetime_balls played', 'club_Test_lifetime_overs', 'club_Test_lifetime_runs gave', 'club_T20_previous3_runs', 'club_T20_previous3_wickets', 'club_T20_previous3_balls played', 'club_T20_previous3_overs', 'club_T20_previous3_runs gave', 'club_T20_lifetime_runs', 'club_T20_lifetime_wickets', 'club_T20_lifetime_balls played', 'club_T20_lifetime_overs', 'club_T20_lifetime_runs gave', 'international_ODI_previous3_runs', 'international_ODI_previous3_wickets', 'international_ODI_previous3_balls played', 'international_ODI_previous3_overs', 'international_ODI_previous3_runs gave', 'international_ODI_lifetime_runs', 'international_ODI_lifetime_wickets', 'international_ODI_lifetime_balls played', 'international_ODI_lifetime_overs', 'international_ODI_lifetime_runs gave', 'international_Test_previous3_runs', 'international_Test_previous3_wickets', 'international_Test_previous3_balls played', 'international_Test_previous3_overs', 'international_Test_previous3_runs gave', 'international_Test_lifetime_runs', 'international_Test_lifetime_wickets', 'international_Test_lifetime_balls played', 'international_Test_lifetime_overs', 'international_Test_lifetime_runs gave', 'international_T20_previous3_runs', 'international_T20_previous3_wickets', 'international_T20_previous3_balls played', 'international_T20_previous3_overs', 'international_T20_previous3_runs gave', 'international_T20_lifetime_runs', 'international_T20_lifetime_wickets', 'international_T20_lifetime_balls played', 'international_T20_lifetime_overs', 'international_T20_lifetime_runs gave']    NOTE THAT HERE total_runs, total_wickets and so on are individual person's data. You can always fill columns as much as you want, even in more than a single player mentioned.
-        - columns = []    # An array containing the data the user wants, Options: ['runs', 'wickets', 'balls', 'strike rate']. NOTE THAT HERE runs, wickets, balls and strike rate are calculated AGAINST ANOTHER PLAYER. IF ONLY 1 PLAYER IS PRESENT. DO NOT USE.
+        - columns = []    # An array containing the data the user wants, Options: ['runs', 'wickets', 'balls', 'strike rate']. NOTE THAT HERE runs, wickets, balls and STRIKE RATE are calculated AGAINST ANOTHER PLAYER. IF ONLY 1 PLAYER IS PRESENT.
         Example: If the user says, "Runs of someone" then matchtype should be ["total_runs"]. If the user says, "wickets by someone against someone else", columns should be ["wickets"]. If the user says, "someone's wickets and balls from someone else", columns should be ["wickets","balls"]. Default = ["runs", "wickets", "balls"]
 
     Note that if two players are mentioned, matchtype is empty. Only columns should be present. If only one player exists, then column might not be empty. If both are explicitly mentioned, prefer matchtype over columns.
@@ -222,7 +222,7 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
              return "No matching player found. Kindly retry."
 
         print("Reading the JSON")
-        player_data = open(f'../data/players/{players[0]}.json', 'r')
+        player_data = open(os.path.join(BASE_DIR,f'./data/players/players/{players[0]}.json'), 'r')
         data_stream = player_data.read()
         print(len(data_stream))
         player_data.close()
@@ -290,7 +290,8 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                     else:
                         data.append([f"{players_name[0]} faced the bowler {players_name[1]}", column, (past_data["played_against"][players_name[1]]["runs"] * 100)/ past_data["played_against"][players[1]]["balls"]])
         elif len(players) == 2:
-            player_data = open(f'../data/players/{players[1]}.json', 'r')
+            # player_data = open(f'../data/players/players/{players[1]}.json', 'r')
+            player_data = open(os.path.join(BASE_DIR,f'./data/players/players/{players[1]}.json'), 'r')
             data_stream = player_data.read()
             print(len(data_stream))
             player_data.close()
@@ -319,8 +320,9 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
                       
                       Adhere to the response format completely without fail. DO NOT USE ANY OTHER FORMAT TO SUMMARISE THE DATA.\nTake the data shown after this line. 
                       Data: \n""" + str(data) + "\nEND OF DATA. when the user asked query: " + str(input_query) + f"\nEND OF USER PROMPT. SET NAME OF PLAYERS TO ONE OF THE OPTIONS: " + str(players_name) + 
-                      '''\nCONFIRM IF THE OUTPUT DATA MATCHES THE QUERY USING COMMON SENSE BEFORE SHOWING OUTPUT. 
-                      IF THE QUERY IS DIFFERENT, ANSWER THE QUERY ON YOUR OWN. IF THE DATA IS EMPTY, ANSWER THE QUERY ON YOUR OWN. ONLY DICUSS IMPORTANT INFORMATION.''')
+                      '''\n 
+                      IF THE QUERY IS DIFFERENT, ANSWER THE QUERY ON YOUR OWN. IF THE DATA IS EMPTY, ANSWER THE QUERY ON YOUR OWN. ONLY DICUSS IMPORTANT INFORMATION.
+                      Example: User: Give me the runs of TR Malik. Data: ['wickets': 4.0]. Your output should NOT be 'I don't have data'. Instead, search on the internet to answer user query.''')
 
         return data
     
@@ -592,9 +594,14 @@ def agentAI(message: str, all_players_id: list, all_players: list, all_players_v
         
     except Exception as e:
         return f"An error occurred: {str(e)}"
+    
+
+
+
 
 
 import pandas as pd
+
 
 def get_response(message, all_players_id, language):
     df = pd.read_csv(os.path.join(BASE_DIR,'./data/final_players.csv'))
@@ -609,3 +616,7 @@ def get_response(message, all_players_id, language):
             all_players_variations[player_name] = variations
     response = agentAI(message, all_players_id, all_players, all_players_variations, language)
     return response
+
+    
+
+
