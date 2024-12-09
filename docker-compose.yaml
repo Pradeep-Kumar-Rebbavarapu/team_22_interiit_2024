@@ -52,19 +52,6 @@ services:
     networks:
       - app-network
 
-  db:
-    image: postgres:latest
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=interiit
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    env_file:
-      - .env
-    networks:
-      - app-network
-
   redis:
     image: redis:latest
     ports:
