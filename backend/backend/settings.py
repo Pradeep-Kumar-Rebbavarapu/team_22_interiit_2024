@@ -30,11 +30,11 @@ WEATHER_API_KEY = env('WEATHER_API_KEY')
 DEBUG = env.bool('DEBUG', default=False)
 
 if not DEBUG:
-    ALLOWED_HOSTS = ['172.27.80.1','localhost','127.0.0.1']
+    ALLOWED_HOSTS = ['172.27.80.1','localhost','127.0.0.1',"103.159.214.171"]
     HOST_URL = env('HOST_URL')
     if HOST_URL:
         ALLOWED_HOSTS.append(HOST_URL)
-        CSRF_TRUSTED_ORIGINS = [f"http://{HOST_URL}","http://127.0.0.1:8000","http://localhost:8000","http://172.16.4.2:8080","http://dreams11.site:8080",]
+        CSRF_TRUSTED_ORIGINS = [f"http://{HOST_URL}","http://127.0.0.1:8000","http://localhost:8000","http://172.16.4.2:8080","http://dreams11.site:8080","http://103.159.214.171"]
     else:
         raise ImproperlyConfigured("HOST_URL environment variable is not set")
 else:
