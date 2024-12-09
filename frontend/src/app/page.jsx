@@ -1,3 +1,4 @@
+'use client'
 import { useState, useEffect } from "react";
 import { getMatches } from "@/api";
 import { ShowComponents } from "@/components/home";
