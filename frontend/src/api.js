@@ -3,7 +3,7 @@ const BASE_URL = "http://dreams11.site:8080/backend" + "/api/v1";
 
 async function apiCall(endpoint, params = {}, token = null, options = {}) {
   const url = `${BASE_URL}/${endpoint}`;
-
+  console.log('ur',url)
   const queryParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
