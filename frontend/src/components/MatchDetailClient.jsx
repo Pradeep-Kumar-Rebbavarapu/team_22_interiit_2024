@@ -98,7 +98,7 @@ const MatchDetailClient = ({ matchData, current_year, optimal = false }) => {
 
   const setPrediction = async () => {
     const response = await fetch(
-      "http://dreams11.site:8080/backend/api/v1/predict-players/",
+      "http://dreams11.site/backend/api/v1/predict-players/",
       {
         method: "POST",
         headers: {
