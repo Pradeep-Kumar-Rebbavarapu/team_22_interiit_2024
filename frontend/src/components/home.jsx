@@ -12,19 +12,19 @@ import Link from "next/link";
 import "@/app/css/welcome.css";
 
 export function ShowComponents({ matches }) {
-  const [showGreet, setShowGreet] = useState(true);
+  // const [showGreet, setShowGreet] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowGreet(false);
-    }, 2000);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setShowGreet(false);
+  //   }, 2000);
 
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
-  if (showGreet) {
-    return <Greet />;
-  }
+  // if (showGreet) {
+  //   return <Greet />;
+  // }
 
   return (
     <>
