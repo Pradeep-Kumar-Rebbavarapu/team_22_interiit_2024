@@ -7,7 +7,7 @@ export default async function Page() {
   return (
     <div>
       hello
-  {/* <ShowComponents matches={matches} /> */}
+  <ShowComponents matches={matches} />
   </div>
   )
 }
