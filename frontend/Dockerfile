@@ -8,7 +8,7 @@ RUN npm install --force
 
 COPY . .
 
-EXPOSE 3033
+EXPOSE 3000
 
 COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
