@@ -10,6 +10,7 @@ COPY . .
 
 EXPOSE 3000
 
-RUN npm run build
+COPY entrypoint.sh /
+RUN chmod +x /entrypoint.sh
 
-CMD ["npm","run","dev"]
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
