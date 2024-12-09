@@ -16,7 +16,7 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 # Expose application ports
-EXPOSE 8000 8001 8088
+EXPOSE 8000
 
 # Define the command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.wsgi:application", "--timeout", "15", "--preload","--workers","14"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
