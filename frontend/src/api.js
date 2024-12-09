@@ -1,20 +1,20 @@
 // const BASE_URL = "http://127.0.0.1:8000/backend" + "/api/v1";
 const BASE_URL = "http://dreams11.site/backend" + "/api/v1";
 
+import axios from 'axios';
+
 async function apiCall(endpoint, params = {}, token = null, options = {}) {
   const url = `${BASE_URL}/${endpoint}`;
-  console.log('ur',url)
+  console.log('url', url);
+  
   const queryParams = new URLSearchParams();
-
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
       queryParams.append(key, value);
     }
   });
 
-  const fullUrl = `${url}${
-    queryParams.toString() ? `?${queryParams.toString()}` : ""
-  }`;
+  const fullUrl = `${url}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 
   const headers = {
     "Content-Type": "application/json",
@@ -22,25 +22,21 @@ async function apiCall(endpoint, params = {}, token = null, options = {}) {
     ...options.headers,
   };
 
-  const requestOptions = {
-    cache: "no-store",
-    headers,
-    ...options,
-  };
-
   try {
-    const response = await fetch(fullUrl, requestOptions);
+    const response = await axios({
+      method: 'get',  
+      url: fullUrl,
+      headers: headers,
+      ...options,
+    });
 
-    if (response.status === 401) {
-      throw new Error("Unauthorized");
-    }
-
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error(`Error fetching data from ${endpoint}:`, error);
     throw error;
   }
 }
+
 
 export function getMatches(params = {}, token = null, options = {}) {
   return apiCall("matches", params, token, options);
