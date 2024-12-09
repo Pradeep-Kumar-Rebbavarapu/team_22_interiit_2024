@@ -1,5 +1,5 @@
 // const BASE_URL = "http://127.0.0.1:8000/backend" + "/api/v1";
-const BASE_URL = "http://dreams11.site/backend" + "/api/v1";
+const BASE_URL = "http://103.159.214.171/backend" + "/api/v1";
 
 async function apiCall(endpoint, params = {}, token = null, options = {}) {
   const url = `${BASE_URL}/${endpoint}`;

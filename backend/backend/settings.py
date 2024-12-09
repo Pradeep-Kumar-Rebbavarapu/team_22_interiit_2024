@@ -38,8 +38,8 @@ if not DEBUG:
     else:
         raise ImproperlyConfigured("HOST_URL environment variable is not set")
 else:
-    ALLOWED_HOSTS = ['localhost','127.0.0.1',"dreams11.site",'172.27.80.1']
-    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://172.27.80.1:8000","http://172.16.4.2:8080/","http://dreams11.site","http://dreams11.site:8080"]
+    ALLOWED_HOSTS = ['localhost','127.0.0.1',"dreams11.site",'172.27.80.1','103.159.214.171']
+    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://172.27.80.1:8000","http://172.16.4.2:8080/","http://dreams11.site","http://dreams11.site:8080","http://103.159.214.171"]
 
 # Application definition
 
