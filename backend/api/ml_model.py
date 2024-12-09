@@ -163,7 +163,9 @@ class GPT(nn.Module):
             outputs.append(idx_next[i].item())
         return outputs
 
-with open(os.path.join(BASE_DIR,"api/model_config.json"), "r") as f:
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+with open(os.path.join(BASE_DIR, "api/model_config.json"), "r") as f:
     data = json.load(f)
     running_mean = data["running_mean"]
     running_std = data["running_std"]
@@ -171,19 +173,18 @@ with open(os.path.join(BASE_DIR,"api/model_config.json"), "r") as f:
     n_heads = data["n_heads"]
     n_layers = data["n_layers"]
 
-model = GPT(d_model=d_model, n_heads=n_heads, n_layers=n_layers).to("mps")
-model.load_state_dict(torch.load(os.path.join(BASE_DIR,"api/final_model.pt"), map_location="mps"))
+model = GPT(d_model=d_model, n_heads=n_heads, n_layers=n_layers).to(device)
+model.load_state_dict(torch.load(os.path.join(BASE_DIR, "api/final_model.pt"), map_location=device))
 model.eval()
 
 def predict_players(inference_row):
-    # print(inference_row)
     inference_row_copy = inference_row.copy()
     model_input = convert_row(inference_row)
-    model_input.unsqueeze(0)
     model_input = (model_input - running_mean) / running_std
 
-    output = model.generate(model_input.unsqueeze(0).to("mps"), 11)
-    print(output)
+    model_input = model_input.unsqueeze(0).to(device)
+    output = model.generate(model_input, 11)
+
     names = []
     for idx in output:
         names.append(inference_row_copy[8 + idx])
