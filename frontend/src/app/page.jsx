@@ -6,7 +6,6 @@ export default async function Page() {
   console.log('matches',matches)
   return (
     <div>
-      hello
   <ShowComponents matches={matches} />
   </div>
   )
