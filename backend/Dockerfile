@@ -5,9 +5,9 @@ FROM python:3.12
 WORKDIR /app
 
 # Copy and install dependencies
-COPY ./requirements.txt .
+COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code
 COPY . .
@@ -16,7 +16,7 @@ COPY . .
 RUN python manage.py collectstatic --noinput
 
 # Expose application ports
-EXPOSE 8088 8001
+EXPOSE 8000 8001 8088
 
 # Define the command to run the application
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.wsgi:application", "--timeout", "15", "--preload", "--workers", "14"]
