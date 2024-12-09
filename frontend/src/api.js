@@ -32,7 +32,7 @@ async function apiCall(endpoint, params = {}, token = null, options = {}) {
 
     return response.data;
   } catch (error) {
-    console.error(`Error fetching data from ${endpoint}:`, error);
+    console.error(`Error fetching data from ${url}:`, error);
     throw error;
   }
 }
