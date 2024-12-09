@@ -1,166 +1,190 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.utils.data as data
 import math
-import copy
-from tqdm import tqdm
 from backend.settings import BASE_DIR
 import os
-#####transformer-arch######
+import json 
+import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
+
+def convert_row(row):
+    row[0] = 0
+    row[8:30] = [0] * 22
+    # print(row)
+    row = np.array(row)
+
+    match_data = torch.tensor(row[1:8], dtype=torch.float32).unsqueeze(0).expand(22, 7)
+
+    # Process target data for each player (22 players, 15 stats)
+    player_targets = []
+    player_idxs = row[30:360][14::15].argsort()[::-1]
+
+    for i in player_idxs:
+        temp = torch.zeros(192)
+        temp[100:115] = torch.tensor(row[30+i*15:45+i*15], dtype=torch.float32) 
+        temp[115+i] = 1
+        player_targets.append(temp)
+    target = torch.stack(player_targets)  # Shape: [22, 192]
+
+    # Process source data for each player (22 players, 33 stats)
+    head_to_head = []
+    for i in range(22):
+        head_to_head_stats = row[360 + (i*33): 393 + (i*33)]
+        head_to_head.append(torch.tensor(head_to_head_stats, dtype=torch.float32))
+
+    head_to_head = torch.stack(head_to_head)  # Shape: [22, 33]
+
+    player_data = []
+    for i in range(22):
+        player_stats = row[1086 + (i*60):1146 + (i*60)]
+        player_data.append(torch.tensor(player_stats, dtype=torch.float32))
+    player_data = torch.stack(player_data)  # Shape: [22, 60]
+
+    # Concatenate match data with player data
+    source = torch.cat([match_data, player_data, head_to_head], dim=1)  # Shape: [22, 100]
+    src = torch.zeros((22, 192))
+    src[:, :100] = source
+    tokens = torch.cat([src, target]) # Shape: [44, 100]
+
+    return src
+
 class MultiHeadAttention(nn.Module):
-    def __init__(self, d_model, num_heads):
-        super(MultiHeadAttention, self).__init__()
-        assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
+    def __init__(self, d_model: int, n_heads: int):
+        super().__init__()
 
-        self.d_model = d_model
-        self.num_heads = num_heads
-        self.d_k = d_model // num_heads
+        self.n_heads = n_heads
+        self.head_dim = d_model // n_heads
 
-        self.W_q = nn.Linear(d_model, d_model)
-        self.W_k = nn.Linear(d_model, d_model)
-        self.W_v = nn.Linear(d_model, d_model)
-        self.W_o = nn.Linear(d_model, d_model)
+        assert (n_heads * self.head_dim == d_model)
 
-    def scaled_dot_product_attention(self, Q, K, V, mask=None):
-        attn_scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.d_k)
-        if mask is not None:
-            attn_scores = attn_scores.masked_fill(mask == 0, -1e9)
-        attn_probs = torch.softmax(attn_scores, dim=-1)
-        output = torch.matmul(attn_probs, V)
-        return output
+        self.query = nn.Linear(d_model, d_model)
+        self.key = nn.Linear(d_model, d_model)
+        self.value = nn.Linear(d_model, d_model)
+        self.fc_out = nn.Linear(d_model, d_model)
+        self.dropout = nn.Dropout(0.2)
 
-    def split_heads(self, x):
-        batch_size, seq_length, d_model = x.size()
-        return x.view(batch_size, seq_length, self.num_heads, self.d_k).transpose(1, 2)
+    def forward(self, inputs: torch.Tensor):
+        B, seq_length, d_model = inputs.shape
 
-    def combine_heads(self, x):
-        batch_size, _, seq_length, d_k = x.size()
-        return x.transpose(1, 2).contiguous().view(batch_size, seq_length, self.d_model)
+        # Project the input embeddings into Q, K, and V
+        Q = self.query(inputs).view(B, seq_length, self.n_heads, self.head_dim).permute(0, 2, 1, 3)
+        K = self.key(inputs).view(B, seq_length, self.n_heads, self.head_dim).permute(0, 2, 1, 3)
+        V = self.value(inputs).view(B, seq_length, self.n_heads, self.head_dim).permute(0, 2, 1, 3)
 
-    def forward(self, Q, K, V, mask=None):
-        Q = self.split_heads(self.W_q(Q))
-        K = self.split_heads(self.W_k(K))
-        V = self.split_heads(self.W_v(V))
+        # Compute attention scores
+        attention_scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.head_dim)
 
-        attn_output = self.scaled_dot_product_attention(Q, K, V, mask)
-        output = self.W_o(self.combine_heads(attn_output))
-        return output
+        # Apply mask to prevent attention to future tokens
+        mask = torch.triu(torch.ones(seq_length, seq_length), diagonal=1).bool().to(inputs.device)
+        attention_scores = attention_scores.masked_fill(mask, float('-inf'))
 
-class PositionWiseFeedForward(nn.Module):
-    def __init__(self, d_model, d_ff):
-        super(PositionWiseFeedForward, self).__init__()
-        self.fc1 = nn.Linear(d_model, d_ff)
-        self.fc2 = nn.Linear(d_ff, d_model)
-        self.relu = nn.ReLU()
+        attention_weights = torch.softmax(attention_scores, dim=-1)
+        # Compute the weighted sum of the values
+        attention_output = torch.matmul(self.dropout(attention_weights), V)
 
-    def forward(self, x):
-        return self.fc2(self.relu(self.fc1(x)))
+        # Concatenate heads and put them back to the original shape
+        attention_output = attention_output.permute(0, 2, 1, 3).contiguous()
+        attention_output = attention_output.view(B, seq_length, d_model)
 
-class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_seq_length):
-        super(PositionalEncoding, self).__init__()
+        # Apply the final linear transformation
+        out = self.fc_out(attention_output)
+        return out
 
-        pe = torch.zeros(max_seq_length, d_model)
-        position = torch.arange(0, max_seq_length, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model))
 
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
+class GPTBlock(nn.Module):
+    def __init__(self, d_model, n_heads):
+        super().__init__()
+        self.att = MultiHeadAttention(d_model, n_heads)
+        self.bn1 = nn.BatchNorm1d(d_model)
+        self.bn2 = nn.BatchNorm1d(d_model)
+        self.dropout = nn.Dropout(0.2)
+        self.fcn = nn.Sequential(
+            nn.Linear(d_model, 4 * d_model),
+            nn.GELU(),
+            nn.Linear(4 * d_model, d_model)
+        )
 
-        self.register_buffer('pe', pe.unsqueeze(0))
+    def forward(self, logits):
+        att_logits = self.att(logits)
+        adn_logits = self.bn1((logits + att_logits).permute(0, 2, 1)).permute(0, 2, 1)
+        logits = self.dropout(logits + att_logits)
+        logits = self.fcn(logits)
+        logits = self.bn2((logits + adn_logits).permute(0, 2, 1)).permute(0, 2, 1)
+        return logits
 
-    def forward(self, x):
-        return x + self.pe[:, :x.size(1)]
 
-class EncoderLayer(nn.Module):
-    def __init__(self, d_model, num_heads, d_ff, dropout):
-        super(EncoderLayer, self).__init__()
-        self.self_attn = MultiHeadAttention(d_model, num_heads)
-        self.feed_forward = PositionWiseFeedForward(d_model, d_ff)
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
-        self.dropout = nn.Dropout(dropout)
+class GPT(nn.Module):
+    def __init__(self, d_model, n_heads, n_layers):
+        super().__init__()
+        self.blocks = nn.ModuleList([GPTBlock(d_model, n_heads) for _ in  range(n_layers)])
+        self.linear1 = nn.Linear(d_model, d_model)
+    
+    def forward(self, inputs, targets = None):
+        logits = inputs
 
-    def forward(self, x, mask):
+        for block in self.blocks:
+            logits = block(logits)
+        
+        logits = self.linear1(logits)
+        
+        loss = None
+        if targets != None:
+            batch_size, sequence_length, d_model = logits.shape
+            # to calculate loss for all token embeddings in a batch
+            # kind of a requirement for cross_entropy
+            logits_ce = logits[:,21:,115:137]
+            targets_ce = targets[:,21:,115:137]
+            ce_loss = F.cross_entropy(logits_ce, targets_ce)
 
-        attn_output = self.self_attn(x, x, x, mask)
-        x = self.norm1(x + self.dropout(attn_output))
-        ff_output = self.feed_forward(x)
-        x = self.norm2(x + self.dropout(ff_output))
-        return x
+            # input_loss = F.mse_loss(logits[:,:21, :], targets[:, :21, :])
+            # print(logits[0,30,:15], targets[0, 30, :15])
+            mse_loss = F.mse_loss(logits[:,21:,100:115], targets[:, 21:, 100:115])
+            # mse_loss = F.mse_loss(logits, targets)
+            loss = mse_loss + ce_loss  #+ input_loss
+        return logits, loss
 
-class DecoderLayer(nn.Module):
-    def __init__(self, d_model, num_heads, d_ff, dropout):
-        super(DecoderLayer, self).__init__()
-        self.self_attn = MultiHeadAttention(d_model, num_heads)
-        self.cross_attn = MultiHeadAttention(d_model, num_heads)
-        self.feed_forward = PositionWiseFeedForward(d_model, d_ff)
-        self.norm1 = nn.LayerNorm(d_model)
-        self.norm2 = nn.LayerNorm(d_model)
-        self.norm3 = nn.LayerNorm(d_model)
-        self.dropout = nn.Dropout(dropout)
+    def generate(self, inputs, max_new_tokens):
+        outputs = []
+        for _ in range(max_new_tokens):
 
-    def forward(self, x, enc_output, src_mask, tgt_mask):
-        attn_output = self.self_attn(x, x, x, tgt_mask)
-        x = self.norm1(x + self.dropout(attn_output))
-        attn_output = self.cross_attn(x, enc_output, enc_output, src_mask)
-        x = self.norm2(x + self.dropout(attn_output))
-        ff_output = self.feed_forward(x)
-        x = self.norm3(x + self.dropout(ff_output))
-        return x
+            logits, _ = self(inputs)
+            logits = logits[:, -1, :]
+            probs = F.softmax(logits[:, 115:137], dim=1)
+            # get the probable token based on the input probs
+            # idx_next = torch.multinomial(probs, num_samples=1)
+            idx_next = torch.argsort(probs, dim=1)[0]
+            # select the index which is not yet selected
+            i = 0
+            while idx_next[i] in outputs:
+                i += 1
+            inputs = torch.cat([inputs, logits.unsqueeze(1)], dim=1)
+            outputs.append(idx_next[i].item())
+        return outputs
 
-class Transformer(nn.Module):
-  def __init__(self, src_vocab_size, tgt_vocab_size, d_model, num_heads, num_layers, d_ff, max_seq_length, dropout):
-      super(Transformer, self).__init__()
-      self.encoder_embedding = nn.Embedding(src_vocab_size, d_model)
-      self.decoder_embedding = nn.Embedding(tgt_vocab_size, d_model)
-      self.positional_encoding = PositionalEncoding(d_model, max_seq_length)
+with open(os.path.join(BASE_DIR,"api/model_config.json"), "r") as f:
+    data = json.load(f)
+    running_mean = data["running_mean"]
+    running_std = data["running_std"]
+    d_model = data["d_model"]
+    n_heads = data["n_heads"]
+    n_layers = data["n_layers"]
 
-      self.encoder_layers = nn.ModuleList([EncoderLayer(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)])
-      self.decoder_layers = nn.ModuleList([DecoderLayer(d_model, num_heads, d_ff, dropout) for _ in range(num_layers)])
-
-      self.fc = nn.Linear(d_model, tgt_vocab_size)
-      self.dropout = nn.Dropout(dropout)
-
-  def generate_mask(self, src, tgt):
-      src_mask = (torch.ones((src.shape[0],src.shape[1]), dtype=torch.bool)).unsqueeze(1).unsqueeze(2)
-      tgt_mask = (tgt != 0).unsqueeze(1).unsqueeze(3)
-      seq_length = tgt.size(1)
-      nopeak_mask = (1 - torch.triu(torch.ones(1, seq_length, seq_length), diagonal=1)).bool()
-      tgt_mask = tgt_mask & nopeak_mask
-      return src_mask, tgt_mask
-
-  def forward(self, src, tgt):
-      src_mask, tgt_mask = self.generate_mask(src, tgt[:,:,0])
-      src_embedded = src
-      tgt_embedded = self.dropout(tgt)
-      enc_output = src_embedded
-      for enc_layer in self.encoder_layers:
-
-          enc_output = enc_layer(enc_output, src_mask)
-
-      dec_output = tgt_embedded
-      for dec_layer in self.decoder_layers:
-          dec_output = dec_layer(dec_output, enc_output, src_mask, tgt_mask)
-
-      output = self.fc(dec_output)
-      return output
-
-# Example input and output shapes
-batch_size = 32
-src_seq_len = 20
-tgt_seq_len = 15
-src_vocab_size = 1000
-tgt_vocab_size = 66
-d_model = 66
-num_heads = 6
-num_layers = 6
-d_ff = 2048
-
-# Create the Transformer model
-model = Transformer(src_vocab_size, tgt_vocab_size, d_model, num_heads, num_layers, d_ff, src_seq_len, 0.1)
-# model.load_state_dict(torch.load(os.path.join(BASE_DIR,"model.pt")))
+model = GPT(d_model=d_model, n_heads=n_heads, n_layers=n_layers).to("mps")
+model.load_state_dict(torch.load(os.path.join(BASE_DIR,"api/final_model.pt"), map_location="mps"))
+model.eval()
 
 def predict_players(inference_row):
-    return inference_row[8:19]
+    # print(inference_row)
+    inference_row_copy = inference_row.copy()
+    model_input = convert_row(inference_row)
+    model_input.unsqueeze(0)
+    model_input = (model_input - running_mean) / running_std
+
+    output = model.generate(model_input.unsqueeze(0).to("mps"), 11)
+    print(output)
+    names = []
+    for idx in output:
+        names.append(inference_row_copy[8 + idx])
+    return names
