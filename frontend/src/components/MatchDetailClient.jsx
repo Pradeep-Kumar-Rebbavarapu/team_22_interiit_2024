@@ -98,7 +98,7 @@ const MatchDetailClient = ({ matchData, current_year, optimal = false }) => {
 
   const setPrediction = async () => {
     const response = await fetch(
-      "https://many-clam-vast.ngrok-free.app/backend/api/v1/predict-players/",
+      "https://qwertyweb.xyz:8443/backend/api/v1/predict-players/",
       {
         method: "POST",
         headers: {
