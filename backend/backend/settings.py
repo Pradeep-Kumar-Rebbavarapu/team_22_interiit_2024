@@ -38,8 +38,8 @@ if not DEBUG:
     else:
         raise ImproperlyConfigured("HOST_URL environment variable is not set")
 else:
-    ALLOWED_HOSTS = ['localhost','127.0.0.1','172.27.80.1','103.159.214.171']
-    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://103.159.214.171"]
+    ALLOWED_HOSTS = ['localhost','127.0.0.1','172.27.80.1','103.159.214.171','qwertyweb.xyz']
+    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://103.159.214.171","http://qwertyweb.xyz","http://qwertyweb.xyz/backend"]
 
 # Application definition
 
