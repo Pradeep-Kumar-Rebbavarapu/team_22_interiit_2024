@@ -26,38 +26,17 @@ services:
     networks:
       - app-network
 
-  backend-nginx:
+  nginx:
     build:
-      context: ./nginx/backend
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    depends_on:
-      - daphne
-      - backend
-    volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
-    networks:
-      - app-network
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    depends_on:
-      - redis
-    networks:
-      - app-network
-
-  frontend-nginx:
-    build:
-      context: ./nginx/frontend
+      context: ./nginx
       dockerfile: Dockerfile
     ports:
       - "80:80"
     depends_on:
-      - frontend
+      - daphne
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
     networks:
       - app-network
 
@@ -73,5 +52,6 @@ networks:
     driver: bridge
 
 volumes:
+  postgres_data:
   static_volume:
   media_volume:
