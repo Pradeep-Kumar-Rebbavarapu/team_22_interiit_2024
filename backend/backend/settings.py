@@ -30,7 +30,7 @@ WEATHER_API_KEY = env('WEATHER_API_KEY')
 DEBUG = env.bool('DEBUG', default=False)
 
 if not DEBUG:
-    ALLOWED_HOSTS = ['172.27.80.1','localhost','127.0.0.1',"103.159.214.171"]
+    ALLOWED_HOSTS = ['172.27.80.1','localhost','127.0.0.1',"103.159.214.171",".ngrok-free.app"]
     HOST_URL = env('HOST_URL')
     if HOST_URL:
         ALLOWED_HOSTS.append(HOST_URL)
@@ -38,13 +38,13 @@ if not DEBUG:
     else:
         raise ImproperlyConfigured("HOST_URL environment variable is not set")
 else:
-    ALLOWED_HOSTS = ['localhost','127.0.0.1',"dreams11.site",'172.27.80.1','103.159.214.171']
-    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://172.27.80.1:8000","http://172.16.4.2:8080/","http://dreams11.site","http://dreams11.site:8080","http://103.159.214.171"]
+    ALLOWED_HOSTS = ['localhost','127.0.0.1',"dreams11.site",'172.27.80.1','103.159.214.171','.ngrok-free.app',"many-clam-vast"]
+    CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000","http://localhost:8000","http://172.27.80.1:8000","http://172.16.4.2:8080/","http://dreams11.site","http://dreams11.site:8080","http://103.159.214.171","https://many-clam-vast.ngrok-free.app"]
 
 # Application definition
 
 CORS_ALLOW_ALL_ORIGINS = True
-
+CORS_ALLOW_CREDENTIALS = True
 # Application definition
 
 INSTALLED_APPS = [

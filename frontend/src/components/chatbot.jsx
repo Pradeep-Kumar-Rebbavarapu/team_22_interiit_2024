@@ -4,18 +4,10 @@ import React, { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  Send,
-  Info,
-  Trophy,
-  UserCircle2,
-  ChevronLeft,
-  MessageCircle,
-} from "lucide-react"
+import { Send, Info, Trophy, UserCircle2, ChevronLeft, MessageCircle } from 'lucide-react'
 import AudioBar from '@/components/ui/audio'
 import { webSocketConnection } from "@/lib/websockets"
 import { TypeAnimation } from 'react-type-animation'
-import { getMatchRelatedChats } from "@/api"
 
 const TypingIndicator = () => {
   const [dots, setDots] = useState('.')
@@ -44,10 +36,14 @@ const TypingIndicator = () => {
   )
 }
 
-export default function Dream11AIChat({ match_id }) {
+export default function Dream11AIChat({ match_id, messages }) {
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
-  const [chatHistory, setChatHistory] = useState([])
+  const [chatHistory, setChatHistory] = useState(messages.map(msg => ({
+    id: msg.id.toString(),
+    text: msg.message,
+    isUser: msg.is_user,
+  })))
   const [isTyping, setIsTyping] = useState(false)
   const [language, setLanguage] = useState("English")
   const messagesEndRef = useRef(null)
@@ -62,7 +58,9 @@ export default function Dream11AIChat({ match_id }) {
     setChatHistory((prev) => [...prev, aiMessage])
   }
 
-  webSocketConnection.addMessage = addMessage
+  useEffect(() => {
+    webSocketConnection.addMessage = addMessage
+  }, [])
 
   const toggleChat = () => setIsOpen(!isOpen)
 
@@ -85,25 +83,6 @@ export default function Dream11AIChat({ match_id }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [chatHistory, isTyping])
-
-  useEffect(() => {
-    const fetchMatchChats = async () => {
-      try {
-        const matchChats = await getMatchRelatedChats({ match_id: match_id })
-        setChatHistory(matchChats.map((chat) => ({
-          id: chat.id,
-          text: chat.message,
-          isUser: chat.is_user,
-        })))
-      } catch (error) {
-        console.error("Error fetching match chats:", error)
-      }
-    }
-
-    if (isOpen) {
-      fetchMatchChats()
-    }
-  }, [match_id, isOpen])
 
   if (!isOpen) {
     return (
@@ -153,25 +132,19 @@ export default function Dream11AIChat({ match_id }) {
           {chatHistory.map((message) => (
             <div
               key={message.id}
-              className={`flex items-start gap-4 ${message.isUser ? "justify-end" : "justify-start"
-                }`}
+              className={`flex items-start gap-4 ${message.isUser ? "justify-end" : "justify-start"}`}
             >
               {!message.isUser && (
                 <div className="w-8 h-8 rounded-full bg-[#e53935] flex items-center justify-center flex-shrink-0">
                   <Trophy className="w-5 h-5 text-white" />
                 </div>
               )}
-                <div
-                    className={`rounded-lg p-4 relative max-w-[80%] ${message.isUser
-                    ? "bg-[#e53935] text-white"
-                    : "bg-gray-800 text-white"
-                    }`}
-                >
+              <div
+                className={`rounded-lg p-4 relative max-w-[80%] ${message.isUser ? "bg-[#e53935] text-white" : "bg-gray-800 text-white"}`}
+              >
                 <div className="text-sm break-all">
                   {message.text}
-                  {!message.isUser && 
-                    <AudioBar text={message.text}/>
-                  }
+                  {!message.isUser && <AudioBar text={message.text} />}
                 </div>
               </div>
               {message.isUser && (
@@ -222,3 +195,4 @@ export default function Dream11AIChat({ match_id }) {
     </div>
   )
 }
+

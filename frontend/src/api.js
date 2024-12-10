@@ -1,9 +1,9 @@
 // const BASE_URL = "http://127.0.0.1:8000/backend" + "/api/v1";
-const BASE_URL = "http://localhost:8000/backend" + "/api/v1";
+const BASE_URL = "https://many-clam-vast.ngrok-free.app/backend" + "/api/v1";
 
 async function apiCall(endpoint, params = {}, token = null, options = {}) {
   const url = `${BASE_URL}/${endpoint}`;
-
+  
   const queryParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
@@ -18,6 +18,7 @@ async function apiCall(endpoint, params = {}, token = null, options = {}) {
 
   const headers = {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
@@ -29,6 +30,7 @@ async function apiCall(endpoint, params = {}, token = null, options = {}) {
   };
 
   try {
+    console.log(fullUrl)
     const response = await fetch(fullUrl, requestOptions);
 
     if (response.status === 401) {
@@ -37,7 +39,7 @@ async function apiCall(endpoint, params = {}, token = null, options = {}) {
 
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching data from ${url}:`, error);
+    console.error(`Error fetching data from ${fullUrl}:`, error);
     throw error;
   }
 }
@@ -59,6 +61,7 @@ export function getPlayerData(params = {}, token = null, options = {}) {
 }
 
 export function getMatchRelatedChats(params = {}, token = null, options = {}) {
+  console.log(params)
   return apiCall("get-match-related-chats", params, token, options);
 }
 
