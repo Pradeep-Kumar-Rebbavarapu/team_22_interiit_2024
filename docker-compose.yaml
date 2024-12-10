@@ -33,7 +33,6 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - frontend
       - daphne
     volumes:
       - static_volume:/app/static
