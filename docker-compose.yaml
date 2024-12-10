@@ -1,6 +1,13 @@
 version: "3"
 services:
-z
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
 
   backend:
     build:
