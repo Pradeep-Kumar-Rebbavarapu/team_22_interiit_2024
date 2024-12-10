@@ -40,7 +40,7 @@ services:
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
-      - ./nginx/ssl-certs:/etc/letsencrypt/live/team4.iiticharak.com
+      - ./nginx/ssl-certs:/etc/letsencrypt/live/qwertyweb.xyz
     networks:
       - app-network
 
