@@ -1,14 +1,5 @@
 version: "3"
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    networks:
-      - app-network
-
   backend:
     build:
       context: ./backend
@@ -35,18 +26,38 @@ services:
     networks:
       - app-network
 
-  nginx:
+  backend-nginx:
     build:
-      context: ./nginx
+      context: ./nginx/backend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - daphne
+      - backend
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  frontend-nginx:
+    build:
+      context: ./nginx/frontend
       dockerfile: Dockerfile
     ports:
       - "80:80"
     depends_on:
       - frontend
-      - daphne
-    volumes:
-      - static_volume:/app/static
-      - media_volume:/app/media
     networks:
       - app-network
 
@@ -62,6 +73,5 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
   static_volume:
   media_volume:
