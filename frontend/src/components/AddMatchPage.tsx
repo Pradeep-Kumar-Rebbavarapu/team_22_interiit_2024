@@ -75,7 +75,7 @@ export default function TeamSelectionForm() {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `http://dreams11.site/backend/api/v1/players/?limit=${PLAYERS_PER_PAGE}&offset=${
+          `https://many-clam-vast.ngrok-free.app/backend/api/v1/players/?limit=${PLAYERS_PER_PAGE}&offset=${
             (page - 1) * PLAYERS_PER_PAGE
           }`
         );
@@ -270,7 +270,7 @@ export default function TeamSelectionForm() {
     try {
       setIsLoading(true);
       const response = await axios.post(
-        "http://dreams11.site/backend/api/v1/add-match/",
+        "https://many-clam-vast.ngrok-free.app/backend/api/v1/add-match/",
         submissionData
       );
       toast({
