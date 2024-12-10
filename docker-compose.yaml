@@ -31,12 +31,16 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "8080:80"
+      - "8443:443"
     depends_on:
       - daphne
+    environment:
+      - USE_SSL=true
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
+      - ./nginx/ssl-certs:/etc/letsencrypt/live/team4.iiticharak.com
     networks:
       - app-network
 
