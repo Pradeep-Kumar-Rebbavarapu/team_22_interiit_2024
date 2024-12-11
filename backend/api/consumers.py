@@ -67,7 +67,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # Send response back to client
             await self.send(text_data=json.dumps({
                 'status': 'success',
-                'message': "done"
+                'message': text_data
             }))
 
     @database_sync_to_async
