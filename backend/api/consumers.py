@@ -24,6 +24,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_user_message(self, match_id, message):
+            print("match_id in save user message",match_id)
             match = MatchInfo.objects.get(id=match_id)
             user_chat = Chat.objects.create(
                 match=match,
@@ -45,6 +46,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return ai_chat.id
 
     async def receive(self, text_data):
+            print('text_data',text_data)
             data = json.loads(text_data)
             message = data.get("message", "")
             match_id = data.get("match_id", "")
