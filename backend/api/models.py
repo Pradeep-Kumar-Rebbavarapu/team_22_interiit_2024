@@ -47,7 +47,7 @@ class MatchInfo(models.Model):
     def random_first_prize():
         return f"${random.randint(500, 5000)}"
     def random_amount_to_be_paid():
-        return random.randint(100, 1000)
+        return random.randint(40, 60)
     def random_spots_left():
         return random.randint(1, 11)
 
