@@ -52,22 +52,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
             match_id = data.get("match_id", "")
             language = data.get("language", "")
             print('match_id',match_id)
-            # Save user message
-            await self.save_user_message(match_id, message)
+            # # Save user message
+            # await self.save_user_message(match_id, message)
 
-            # Get players asynchronously
-            all_players = await self.get_match_players(match_id)
-            print('all_players',all_players)
-            # Send message to LLM and get response
-            llm_response = await self.run_agent_ai(message, all_players, language)
+            # # Get players asynchronously
+            # all_players = await self.get_match_players(match_id)
+            # print('all_players',all_players)
+            # # Send message to LLM and get response
+            # llm_response = await self.run_agent_ai(message, all_players, language)
 
-            # Save AI response
-            await self.save_ai_response(match_id, str(llm_response))
+            # # Save AI response
+            # await self.save_ai_response(match_id, str(llm_response))
 
             # Send response back to client
             await self.send(text_data=json.dumps({
                 'status': 'success',
-                'message': str(llm_response)
+                'message': "done"
             }))
 
     @database_sync_to_async
