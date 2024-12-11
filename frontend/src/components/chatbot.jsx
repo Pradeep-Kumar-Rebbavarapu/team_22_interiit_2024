@@ -36,7 +36,7 @@ const TypingIndicator = () => {
   )
 }
 
-export default function Dream11AIChat({ match_id, messages }) {
+export default function Dream11AIChat({ match_id, messages,team_a_player, team_b_player }) {
   console.log('match_id',match_id)
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -75,8 +75,8 @@ export default function Dream11AIChat({ match_id, messages }) {
       }
       setChatHistory((prev) => [...prev, userMessage])
       setIsTyping(true)
-      console.log(userMessage.text, match_id, language)
-      webSocketConnection.sendMessage(userMessage.text, match_id, language)
+      console.log(userMessage.text, match_id, language,team_a_player,team_b_player)
+      webSocketConnection.sendMessage(userMessage.text, match_id, language,team_a_player, team_b_player)
       setInput("")
     }
   }

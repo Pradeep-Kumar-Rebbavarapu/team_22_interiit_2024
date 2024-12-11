@@ -37,9 +37,9 @@ class WebSocketHandler {
     console.log("WebSocket connection closed:", event);
   }
 
-  public sendMessage(message: string, match_id: number, language: string) {
+  public sendMessage(message: string, match_id: number, language: string,team_a_player:[], team_b_player:[]) {
     if (this.socket.readyState === WebSocket.OPEN) {
-      const msg = { message: message, match_id: match_id, language: language};
+      const msg = { message: message, match_id: match_id, language: language,team_a_player:team_a_player,team_b_player:team_b_player};
       console.log('match_id being sent',match_id)
       const sendMsg = JSON.stringify(msg);
       this.socket.send(sendMsg);

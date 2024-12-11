@@ -46,30 +46,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return ai_chat.id
 
     async def receive(self, text_data):
-            print('text_data',text_data)
-            data = json.loads(text_data)
-            message = data.get("message", "")
-            match_id = data.get("match_id", "")
-            language = data.get("language", "")
-            
-            print('match_id',match_id)
-            # # Save user message
-            # await self.save_user_message(match_id, message)
+        print('text_data', text_data)
+        data = json.loads(text_data)
+        message = data.get("message", "")
+        match_id = data.get("match_id", "")
+        language = data.get("language", "")
+        team_a_players = data.get('team_a_player', [])
+        team_b_players = data.get('team_b_player', [])
+        print('match_id', match_id)
+        print('team_a_players', team_a_players)
+        print('team_b_players', team_b_players)
 
-            # Get players asynchronously
-            all_players = await self.get_match_players(match_id)
-            print('all_players',all_players)
-            # Send message to LLM and get response
-            llm_response = await self.run_agent_ai(message, all_players, language)
+        # Combine team_a_players and team_b_players
+        all_players = team_a_players + team_b_players
+        print('all_players', all_players)
+        print(all_players)
+        # Send message to LLM and get response
+        llm_response = await self.run_agent_ai(message, all_players, language)
 
-            # Save AI response
-            await self.save_ai_response(match_id, str(llm_response))
-
-            # Send response back to client
-            await self.send(text_data=json.dumps({
-                'status': 'success',
-                'message': str(llm_response)
-            }))
+        # Send response back to client
+        await self.send(text_data=json.dumps({
+            'status': 'success',
+            'message': str(llm_response)
+        }))
 
     @database_sync_to_async
     def run_agent_ai(self, message, all_players, language):
