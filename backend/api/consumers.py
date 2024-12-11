@@ -24,7 +24,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_user_message(self, match_id, message):
-        try:
             match = MatchInfo.objects.get(id=match_id)
             user_chat = Chat.objects.create(
                 match=match,
@@ -33,12 +32,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 is_ai=False   # Not an AI response
             )
             return user_chat.id
-        except MatchInfo.DoesNotExist:
-            return None
 
     @database_sync_to_async
     def save_ai_response(self, match_id, message):
-        try:
             match = MatchInfo.objects.get(id=match_id)
             ai_chat = Chat.objects.create(
                 match=match,
@@ -47,12 +43,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 is_ai=True     # Response from AI
             )
             return ai_chat.id
-        except MatchInfo.DoesNotExist:
-            return None
 
     async def receive(self, text_data):
-        try:
-            # Parse incoming message
             data = json.loads(text_data)
             message = data.get("message", "")
             match_id = data.get("match_id", "")
@@ -74,12 +66,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({
                 'status': 'success',
                 'message': str(llm_response)
-            }))
-
-        except Exception as e:
-            await self.send(text_data=json.dumps({
-                'status': 'error',
-                'message': f'Error processing message: {str(e)}'
             }))
 
     @database_sync_to_async
