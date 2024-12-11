@@ -40,6 +40,7 @@ class WebSocketHandler {
   public sendMessage(message: string, match_id: number, language: string) {
     if (this.socket.readyState === WebSocket.OPEN) {
       const msg = { message: message, match_id: match_id, language: language};
+      console.log('match_id being sent',match_id)
       const sendMsg = JSON.stringify(msg);
       this.socket.send(sendMsg);
     } else {

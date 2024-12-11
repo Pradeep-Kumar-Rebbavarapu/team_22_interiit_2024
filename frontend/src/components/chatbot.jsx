@@ -37,6 +37,7 @@ const TypingIndicator = () => {
 }
 
 export default function Dream11AIChat({ match_id, messages }) {
+  console.log('match_id',match_id)
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState("")
   const [chatHistory, setChatHistory] = useState(messages.map(msg => ({
