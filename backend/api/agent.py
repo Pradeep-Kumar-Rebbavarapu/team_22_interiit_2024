@@ -615,6 +615,7 @@ def get_response(message, all_players_id, language):
             all_players.append(player_name)
             variations = eval(player_row['player names'].values[0])
             all_players_variations[player_name] = variations
+    print(all_players,all_players_variations)
     response = agentAI(message, all_players_id, all_players, all_players_variations, language)
     return response
 

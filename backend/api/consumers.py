@@ -14,13 +14,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_match_players(self, match_id):
-        try:
-            match = MatchInfo.objects.get(id=match_id)
-            team_a_players = list(match.team_a_players.values_list('identifier', flat=True))
-            team_b_players = list(match.team_b_players.values_list('identifier', flat=True))
-            return team_a_players + team_b_players
-        except MatchInfo.DoesNotExist:
-            return []
+        print('match_id',match_id)
+        match = MatchInfo.objects.get(id=match_id)
+        print(match)
+        team_a_players = list(match.team_a_players.values_list('identifier', flat=True))
+        team_b_players = list(match.team_b_players.values_list('identifier', flat=True))
+        print('players in each team',team_a_players,team_b_players)
+        return team_a_players + team_b_players
 
     @database_sync_to_async
     def save_user_message(self, match_id, message):
@@ -57,13 +57,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             message = data.get("message", "")
             match_id = data.get("match_id", "")
             language = data.get("language", "")
-
+            print('match_id',match_id)
             # Save user message
             await self.save_user_message(match_id, message)
 
             # Get players asynchronously
             all_players = await self.get_match_players(match_id)
-            print(all_players)
+            print('all_players',all_players)
             # Send message to LLM and get response
             llm_response = await self.run_agent_ai(message, all_players, language)
 

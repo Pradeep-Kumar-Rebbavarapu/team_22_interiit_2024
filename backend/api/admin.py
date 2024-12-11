@@ -5,7 +5,7 @@ from .models import ( MatchInfo,  Player, Chat, Message
 
 @admin.register(MatchInfo)
 class MatchInfoAdmin(admin.ModelAdmin):
-    list_display = ('match_type', 'date', 'team_a', 'team_b')
+    list_display = ('id','match_type', 'date', 'team_a', 'team_b')
     list_filter = ( 'match_type',)
     search_fields = ('team_a__name', 'team_b__name')
 

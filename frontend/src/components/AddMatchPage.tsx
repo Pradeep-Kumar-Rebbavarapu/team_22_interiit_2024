@@ -270,7 +270,7 @@ export default function TeamSelectionForm() {
     try {
       setIsLoading(true);
       const response = await axios.post(
-        "https://qwertyweb.xyz:8443/backend/api/v1/add-match/",
+        "http://localhost:8000/backend/api/v1/add-match/",
         submissionData
       );
       toast({

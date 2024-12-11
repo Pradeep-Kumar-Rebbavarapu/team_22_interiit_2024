@@ -1,5 +1,5 @@
-// const websocketURL = "ws://127.0.0.1:8000/ws/chat/";
-const websocketURL = "wss://qwertyweb.xyz:8443/ws/chat/"
+const websocketURL = "ws://127.0.0.1:8000/ws/chat/";
+// const websocketURL = "wss://qwertyweb.xyz:8443/ws/chat/"
 
 class WebSocketHandler {
   private socket: WebSocket;
